@@ -17,7 +17,9 @@ Bash and note what is available: toolbox, chrome-devtools, playwright, exa and f
 when `claude mcp list` shows them connected, not "Needs authentication"), the Bright Data
 unblocker (logged in when `bdata config` succeeds), mobile emulator. Tell the user in one line
 which optional tools are present but not logged in, and how to log in (`/mcp` in Claude Code,
-`bdata login` in a terminal). Do not stop the run for it. If
+`bdata login` in a terminal). If the target has an Android app and `adb devices` lists nothing,
+say that `emulator -avd <name>` starts the device and that the walk will use store data until it
+is running. Do not stop the run for it; the walker can be re-run with `/deepen` later. If
 `git remote -v` shows the public template as origin, tell the user once that this clone will contain
 their inputs and suggest pointing origin at a private repo or removing it. Do not do it for them.
 

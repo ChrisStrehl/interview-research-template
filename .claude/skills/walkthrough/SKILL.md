@@ -41,9 +41,13 @@ each asks and gives. Note where money or the ask appears.
 
 **Settings, help, empty states.** Where the product is unfinished shows here.
 
-**Android**, if `adb devices` lists an emulator and the app is installed: launch it, walk onboarding
-only, then the one flow most likely to differ from web. Use the mobile screenshot tool for frames and
-the accessibility list for taps. If the app refuses to run on an emulator, say so and stop.
+**Android**, if `adb devices` lists an emulator: check the app with
+`adb shell pm list packages | grep <package>`. If it is missing, open the listing with
+`adb shell am start -a android.intent.action.VIEW -d market://details?id=<package>`, tell the user
+to press Install, and continue with web until they have. Then launch it, walk onboarding only, then
+the one flow most likely to differ from web. Use the mobile screenshot tool for frames and the
+accessibility list for taps; `adb exec-out screencap -p > <file>` works as a fallback for frames.
+If the app refuses to run on an emulator, say so and stop.
 
 ## Reading the stack
 

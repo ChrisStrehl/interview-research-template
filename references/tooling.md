@@ -93,20 +93,37 @@ person exactly what to install if the source turns out to matter.
 Android is fully workable on Windows; iOS is not (needs Xcode/`simctl`, Mac-only — use store data
 instead, per `references/source-map.md` §3b).
 
-1. Install Android Studio, then open its SDK Manager and create an AVD (Android Virtual Device) using
-   a system image that **includes Google Play** — plain AOSP images are missing pieces some apps
-   require. *(Exact SDK Manager click-path not verified in this session — confirm against current
-   Android Studio UI. [I])*
-2. Ensure Android Platform Tools (`adb`) is on your `PATH`. Verify with `adb devices` once an emulator
-   or a USB-debug-enabled physical phone is running.
-3. Add mobile-mcp:
-   ```bash
-   claude mcp add mobile-mcp -- npx -y @mobilenext/mobile-mcp@latest
+Verified on Windows 11, 5 Sep 2026 [V]:
+
+1. Install Android Studio and let its first-run wizard finish. On a current install the wizard
+   already downloads a **Google Play** system image and creates a Pixel virtual device (here:
+   `Pixel_10_Pro`, image `android-37.1 google_apis_playstore`). Check with
+   `ls %LOCALAPPDATA%\Android\Sdk\system-images` and `ls %USERPROFILE%\.android\avd`. If no device
+   exists, create one in Android Studio's Device Manager and pick an image whose tag says
+   "Google Play"; plain AOSP images cannot install apps from the store.
+2. Put the SDK on the user PATH once, in PowerShell:
+   ```powershell
+   $sdk="$env:LOCALAPPDATA\Android\Sdk"
+   [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$sdk\platform-tools;$sdk\emulator", "User")
+   [Environment]::SetEnvironmentVariable("ANDROID_HOME", $sdk, "User")
    ```
-   Free, MIT-licensed, platform-agnostic over ADB, ~23 tools; explicitly documented as supporting
-   Windows for both emulators and physical Android devices [V].
-4. Drive the app: mobile-mcp returns accessibility-tree snapshots or works from screenshots with
-   coordinate taps.
+   New terminals see it; a running Claude Code session may need a restart.
+3. Register mobile-mcp at user scope:
+   ```bash
+   claude mcp add -s user mobile-mcp -- npx -y @mobilenext/mobile-mcp@latest
+   ```
+   Free, MIT, drives the device over ADB with accessibility snapshots and screenshots [V].
+4. **Before a research run, start the device**: `emulator -avd Pixel_10_Pro` (or from Android
+   Studio's Device Manager). Boot takes about 75 seconds on this machine; `adb devices` then lists
+   `emulator-5554 device`. Never start the same AVD twice; the second launch fails and leaves an
+   `offline` entry, which `adb kill-server && adb start-server` clears.
+5. **Sign in to Google once on the emulator** (Play Store → Sign in). Without an account the store
+   cannot install anything. Use a Google account you are comfortable using for research. Then
+   install the target app from the Play Store; the walker checks with
+   `adb shell pm list packages | grep <package>` and, if missing, opens the listing with
+   `adb shell am start -a android.intent.action.VIEW -d market://details?id=<package>` and asks you
+   to press Install.
+6. Screenshots from the shell work without the MCP: `adb exec-out screencap -p > file.png` [V].
 
 **Known limitation:** several consumer apps — banking, streaming, some fintech — detect that they are
 running on an emulator and refuse to launch [V]. If that happens, stop: fall back to store listing,
