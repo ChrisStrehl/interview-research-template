@@ -1,0 +1,10 @@
+{
+  "name": "interview-research-toolbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Keyless research toolbox scripts (Node side) for pre-interview company/product research.",
+  "type": "module",
+  "dependencies": {
+    "google-play-scraper": "^10.1.3"
+  }
+}

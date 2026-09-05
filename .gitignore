@@ -1,0 +1,14 @@
+# personal / secrets
+.claude/settings.local.json
+*.env
+.env*
+
+# toolchain
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db

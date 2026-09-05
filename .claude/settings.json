@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch",
+      "Bash(python toolbox/*)",
+      "Bash(node toolbox/*)",
+      "Bash(npm install*)",
+      "Bash(pip install*)",
+      "Bash(claude mcp list)",
+      "Bash(claude plugin list)",
+      "Bash(adb devices)",
+      "Bash(git remote -v)",
+      "Bash(git status*)",
+      "Bash(mkdir*)",
+      "Bash(ls*)",
+      "Bash(curl -s*)"
+    ],
+    "deny": [
+      "Read(./.claude/settings.local.json)",
+      "Read(./.env*)"
+    ]
+  },
+  "enabledPlugins": {
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "exa@claude-plugins-official": true
+  }
+}

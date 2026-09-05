@@ -1,0 +1,26 @@
+{
+  "slug": "",
+  "company": "",
+  "identity": {
+    "legal_entity": "",
+    "domain": "",
+    "hq": "",
+    "founded": "",
+    "surfaces": { "web": "", "android": "", "ios": "", "b2b": "" }
+  },
+  "role": "",
+  "research_email": "",
+  "browser_logged_in": false,
+  "runs": [],
+  "fronts": {
+    "business": null, "money": null, "people": null,
+    "users": null, "culture": null, "market": null, "product": null
+  },
+  "review": null,
+  "frameworks": null,
+  "point_of_view": null,
+  "rendered": null,
+  "capabilities": {},
+  "blocked": [],
+  "unlocks": []
+}
