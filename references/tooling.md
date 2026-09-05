@@ -38,13 +38,20 @@ an Android app you need to click through. Each needs a key from outside this rep
 ### Firecrawl — crawl a whole docs site, changelog or help centre in one shot
 
 ```bash
-claude plugin install firecrawl@claude-plugins-official
-firecrawl login --api-key fc-<your-key>
+claude mcp add -s user --transport http firecrawl https://mcp.firecrawl.dev/v2/mcp-oauth
+claude mcp login firecrawl        # one-time browser OAuth in an interactive terminal, or /mcp inside Claude Code
 ```
-Sign up for a Firecrawl account to get the `fc-...` key. Free tier: 1,000 credits/month, no card (1
-credit per page fetched; `map` costs 1 credit per call) [I]. Env var equivalent: `FIRECRAWL_API_KEY`.
-Unlocks: `map` + `crawl` across an entire site — worth it when you need the full changelog history or
-every docs page, not a single fetch `WebFetch` could already do.
+Firecrawl's hosted MCP server with OAuth: no API key is stored anywhere, the credential lives in
+Claude Code's own store, and user scope makes it available in every clone of this template. Free
+tier: 1,000 credits/month, no card (1 credit per page fetched; `map` costs 1 credit per call) [I].
+The tools appear as `mcp__firecrawl__*` (search, scrape, map, crawl, extract). Unlocks: `map` +
+`crawl` across an entire site — worth it when you need the full changelog history or every docs
+page, not a single fetch `WebFetch` could already do. Alternative if you prefer a key: the
+`firecrawl@claude-plugins-official` plugin wraps the `firecrawl` CLI and takes
+`firecrawl login --api-key fc-<key>`.
+
+Check in a session with `claude mcp list`: "Needs authentication" means the login has not been done
+on this machine yet.
 
 ### Bright Data — the unblocker for Kununu, Glassdoor, G2, Crunchbase pages
 

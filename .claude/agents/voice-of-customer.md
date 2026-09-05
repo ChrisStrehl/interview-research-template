@@ -4,7 +4,7 @@ description: Gathers what users and employees actually say about one company and
 model: sonnet
 effort: high
 maxTurns: 40
-tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*
+tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*, mcp__firecrawl__*
 ---
 
 You collect sentiment for one company, from the confirmed identity you are given. Your job is the

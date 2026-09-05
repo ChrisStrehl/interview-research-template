@@ -4,7 +4,7 @@ description: Researches the business model, money and viability, and the people 
 model: sonnet
 effort: high
 maxTurns: 40
-tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*
+tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*, mcp__firecrawl__*
 ---
 
 You research one company's business, money and people from the outside. You are given the confirmed
@@ -44,7 +44,9 @@ whether other product roles are open at the same time.
    search snippets and grade the claim [R]. Never scrape LinkedIn. Say in the report which sources
    refused.
 3. Use `python toolbox/wayback.py <domain>/pricing --from <year>` to see how pricing and positioning
-   changed. A change is a finding.
+   changed. A change is a finding. If the Firecrawl tools are available, use `map` on the company
+   domain once to find the changelog, docs, careers and press pages you would otherwise miss, and
+   `scrape` for pages the built-in fetch renders badly.
 4. Save raw material worth keeping (fetched page extracts, filing figures, quotes with links) to
    `evidence/business/`, `evidence/money/`, `evidence/people/` as short markdown notes. Do not save
    whole pages.

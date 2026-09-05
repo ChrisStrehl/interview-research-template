@@ -4,7 +4,7 @@ description: Maps the market and competitor set for one company: who else is in 
 model: sonnet
 effort: high
 maxTurns: 35
-tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*
+tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch, mcp__plugin_exa_*, mcp__firecrawl__*
 ---
 
 You map the market around one company, from the confirmed identity you are given. This front is what
