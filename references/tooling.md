@@ -49,12 +49,26 @@ every docs page, not a single fetch `WebFetch` could already do.
 ### Bright Data — the unblocker for Kununu, Glassdoor, G2, Crunchbase pages
 
 ```bash
-claude plugin install brightdata-plugin@claude-plugins-official
+claude plugin install brightdata-plugin@claude-plugins-official   # skills only: teaches Claude the CLI, MCP and APIs
+npm install -g @brightdata/cli                                     # the tool that actually fetches
+bdata login                                                        # one-time browser login; saves the key locally
+bdata config                                                       # confirms auth and the auto-created unlocker zone
 ```
-Create a free Bright Data account to get an API token; set it as `API_TOKEN`. Free tier: 5,000
-requests/month, no card [I]. Unlocks: bot-detection/CAPTCHA bypass and structured extractors for
-40+ sites — the only realistic route to full review text on Kununu and Glassdoor, since `WebFetch`
-is blocked on both and neither publishes a free API.
+The plugin (v1.8.0, verified 5 Sep 2026) ships no MCP server of its own; it ships 21 skills that
+route to the CLI, the hosted MCP server or the REST API. The CLI is the simplest path: after
+`bdata login` no token is ever pasted or stored in a repo. Free tier: 5,000 requests/month, no card
+[I]. Then, from any agent with Bash:
+
+```bash
+bdata scrape https://www.kununu.com/de/<company>/kommentare      # page as markdown, bot walls bypassed
+bdata search "<company> glassdoor reviews"                       # Google results as JSON
+```
+
+If you prefer the MCP server instead, `claude mcp add --transport http brightdata "https://mcp.brightdata.com/mcp?token=<TOKEN>"`
+at user scope, never in the repo. Unlocks: bot-detection and CAPTCHA bypass and structured extractors
+for 40+ sites — the only realistic route to full review text on Kununu, Glassdoor and G2, since
+`WebFetch` is blocked on all three and none publishes a free API. Check availability in a session
+with `bdata config`: a non-zero exit means not logged in.
 
 ### How to report hitting a wall this would remove
 

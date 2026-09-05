@@ -37,9 +37,12 @@ pattern across reviews, org structure and a founder's own posts is strong.
      `python toolbox/reddit.py "<brand>" --subreddits <a,b,c> --limit 50 --comments`
    - `python toolbox/youtube.py --search "<brand> review" --limit 10`, then transcripts of the two
      most relevant videos
-2. Then the review sites. The built-in fetch is blocked on Kununu, Glassdoor and usually G2, so use
-   WebSearch snippets, grade them [R], and record which fetches refused. If a keyed unblocker is
-   available in this session, use it and grade accordingly.
+2. Then the review sites. The built-in fetch is blocked on Kununu, Glassdoor and usually G2. First
+   check `bdata config` through Bash: if it succeeds, the Bright Data CLI is logged in and
+   `bdata scrape <url>` returns the page as markdown through its unblocker; use it for the Kununu
+   comments page, the Glassdoor reviews page and the G2 reviews page, and save the extracts to
+   `evidence/`. If it fails, use WebSearch snippets, grade them [R], and record which fetches refused
+   so the PM can report the wall.
 3. Read the text. Do not summarise from aggregates. Save the extracted reviews and threads you used
    to `evidence/users/` and `evidence/culture/` as markdown with links, trimmed to what carries the
    theme.

@@ -39,8 +39,10 @@ whether other product roles are open at the same time.
 1. Search the legal entity name as well as the brand. Search German and English separately for a
    German company. Search the negative case explicitly: layoffs, Kritik, problems, leaving.
 2. Fetch primary sources when the built-in fetch reaches them. When it does not (Kununu, Glassdoor,
-   LinkedIn, Crunchbase), use the search snippets and grade the claim [R]. Say in the report which
-   sources refused.
+   Crunchbase, North Data detail pages), check `bdata config` through Bash; if the Bright Data CLI
+   is logged in, `bdata scrape <url>` returns the page through its unblocker. Otherwise use the
+   search snippets and grade the claim [R]. Never scrape LinkedIn. Say in the report which sources
+   refused.
 3. Use `python toolbox/wayback.py <domain>/pricing --from <year>` to see how pricing and positioning
    changed. A change is a finding.
 4. Save raw material worth keeping (fetched page extracts, filing figures, quotes with links) to

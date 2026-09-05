@@ -12,8 +12,9 @@ and write the point of view. Read `CLAUDE.md` delegation rules if this session h
 
 ## 0. Session check (once per session)
 
-Run `python toolbox/hn.py --help`, `claude mcp list` and `adb devices` through Bash and note what
-is available: toolbox, chrome-devtools, playwright, exa, mobile emulator, any keyed unblocker. If
+Run `python toolbox/hn.py --help`, `claude mcp list`, `bdata config` and `adb devices` through
+Bash and note what is available: toolbox, chrome-devtools, playwright, exa, the Bright Data
+unblocker (logged in when `bdata config` succeeds), mobile emulator. If
 `git remote -v` shows the public template as origin, tell the user once that this clone will contain
 their inputs and suggest pointing origin at a private repo or removing it. Do not do it for them.
 
