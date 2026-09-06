@@ -44,10 +44,12 @@ built from network capture and `python toolbox/stack.py <url>`.
    the verification mail with codes and links. Choose a password and record it in
    `evidence/product/account.md`.
 3. **When a gate stops you, stop and ask.** A captcha you cannot pass, a phone verification, a
-   payment wall, an emulator with no Play account, an app that refuses the emulator. Save what you
-   have, screenshot the gate, and return the blocked contract below immediately. The PM will ask the
-   user to unblock it and resume you with a message; when resumed, continue from the gate. Do not
-   spend turns retrying, and do not work around it.
+   payment wall, an emulator with no Play account, an app that refuses the emulator. Do everything
+   up to the gate yourself: fill every field of the sign-up form, accept the terms, so that the
+   user's part is one click. Leave the browser exactly where it is, screenshot the gate, and return
+   the blocked contract below immediately. The PM will ask the user to clear it and resume you with
+   a message; when resumed, check the page state first (the user may have submitted the form), then
+   continue. Do not spend turns retrying, and do not work around it.
 4. **Android** when `adb devices` lists a device: check the app with
    `adb shell pm list packages | grep <package>`; if missing, open the Play listing with
    `adb shell am start -a android.intent.action.VIEW -d market://details?id=<package>` and return
