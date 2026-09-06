@@ -65,8 +65,11 @@ finding for the teardown.
 
 - Use the browser's persistent profile. If the user said they logged in there, use that session and
   never change account settings, passwords or payment methods.
-- Sign up only with a research email the user named in `state.json` or the checkpoint. Never with an
-  address you guess. Never with the user's personal email.
+- Sign up only with the research inbox: `python toolbox/mailbox.py address --alias <slug>` gives
+  the per-company address, and `python toolbox/mailbox.py wait --alias <slug> --timeout 180` returns
+  the verification mail with its codes and links extracted. If the script reports that the inbox is
+  not configured, do not sign up; walk the logged-out surface and report the gate. Never use an
+  address you guess and never the user's personal email.
 - Never enter payment details, never complete a purchase, never redeem, withdraw, post, message or
   delete anything on the user's behalf. Stop at the paywall and screenshot it.
 - Stop at captchas, phone verification and identity checks. Report the gate; do not work around it.

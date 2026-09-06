@@ -9,6 +9,33 @@ explains why and where keys actually go.
 
 ---
 
+## 0. The research inbox
+
+Product walks need sign-ups, and sign-ups need an inbox the agent can read. The template uses one
+dedicated Gmail account that the user reads normally and Claude reads over IMAP through
+`toolbox/mailbox.py`. Each company gets its own plus-address (`local+<slug>@gmail.com`), which
+Gmail delivers to the same inbox, so sign-ups stay traceable per company.
+
+Setup, once, by the user:
+
+1. Create a Gmail account used for nothing else.
+2. Google Account → Security → turn on 2-Step Verification → App passwords → create one named
+   `interview-research`. Google shows a 16-character password once.
+3. Put both values in the `env` block of `~/.claude/settings.json` (user level, outside every repo):
+   ```json
+   "env": {
+     "RESEARCH_MAIL_ADDRESS": "someone@gmail.com",
+     "RESEARCH_MAIL_APP_PASSWORD": "abcd efgh ijkl mnop"
+   }
+   ```
+   Claude Code injects that block into every session and every subagent shell. Never put these in
+   `.claude/settings.json` inside a repo.
+4. `python toolbox/mailbox.py check` should print `ok: <address>, N messages`.
+
+Then `address --alias <slug>`, `inbox --alias <slug>`, `read <uid>` and `wait --alias <slug>` cover
+what a walker needs; `wait` polls for the next message and prints the extracted codes and links.
+The app password is revocable from the same Google page at any time.
+
 ## 1. What works out of the box
 
 No install, no key, no signup. Use these first, always.

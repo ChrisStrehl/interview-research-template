@@ -41,9 +41,10 @@ from the GmbH. Write the result as the identity block at the top of `index.md` (
 `templates/index.md`) and into `state.json`.
 
 Then confirm it with the user in one short message: the identity block and the surfaces you intend
-to walk, plus two questions only if they change the run: whether the product needs an account and
-they have one they are willing to use in the persistent browser profile, and whether there is a
-research email you may sign up with. Wait for the answer. This is the only checkpoint in the run.
+to walk, plus one question only if it changes the run: whether they have already logged into the
+product in the persistent browser profile, or whether the walker should sign up itself with the
+research inbox (`python toolbox/mailbox.py check` tells you whether that inbox is configured; say
+so). Wait for the answer. This is the only checkpoint in the run.
 
 ## 3. Gather (one turn, four agents)
 

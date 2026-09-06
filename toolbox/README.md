@@ -24,6 +24,7 @@ cd toolbox && npm install && cd ..
 | `youtube.py` | Video transcript (timestamped paragraphs), or `--search "<query>"` to list videos | `python toolbox/youtube.py --search "freecash app review" --limit 5` |
 | `stack.py` | Tech-stack sniff of a site: response headers of interest + vendor table by category | `python toolbox/stack.py https://freecash.com` |
 | `render.py` | Renders a `companies/<slug>` workspace into one self-contained HTML page (maintained separately) | `python toolbox/render.py companies/<slug>` |
+| `mailbox.py` | The dedicated research inbox over IMAP (Gmail + app password): per-company plus-addresses, inbox listing, read with extracted codes and links, wait for the next verification mail | `python toolbox/mailbox.py address --alias almedia` | Credentials come only from `RESEARCH_MAIL_ADDRESS` and `RESEARCH_MAIL_APP_PASSWORD` in the user-level settings env; some sign-up forms reject plus-addresses, report that as a gate |
 
 ## Known limits
 
