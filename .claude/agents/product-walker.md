@@ -52,10 +52,14 @@ built from network capture and `python toolbox/stack.py <url>`.
    continue. Do not spend turns retrying, and do not work around it.
 4. **Android** when `adb devices` lists a device: check the app with
    `adb shell pm list packages | grep <package>`; if missing, open the Play listing with
-   `adb shell am start -a android.intent.action.VIEW -d market://details?id=<package>` and return
-   blocked (the user must press Install). If present, log in with the account you created, walk
-   onboarding and the flow most likely to differ from web, six to ten screenshots via the mobile
-   tools or `adb exec-out screencap -p > <file>`.
+   `adb shell am start -a android.intent.action.VIEW -d market://details?id=<package>` and tap
+   Install with the mobile tools (Play must be signed in; if it is not, return blocked). Native
+   sign-in forms are stricter than web: rate limits after two attempts, captchas that reset. Make
+   at most one email sign-in attempt with the account you created; if it fails, return blocked
+   with ask = "sign in on the emulator yourself; Google sign-in with the research account usually
+   works where email is rate-limited", and continue from the signed-in state when resumed. Then
+   walk onboarding, the offer wall, one offer detail and cash-out, eight to twelve screenshots via
+   the mobile tools or `adb exec-out screencap -p > <file>`, noting every difference from web.
 5. **Budget is flexible.** You have many turns; use them on screens, not on re-snapshotting. If you
    run out, the PM resumes you; say in your last message which flow you were in.
 
