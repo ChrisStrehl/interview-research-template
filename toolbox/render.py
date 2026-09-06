@@ -14,12 +14,23 @@ Dependency: markdown (pip install --user markdown). Everything else is stdlib.
 import argparse, base64, mimetypes, re, sys, webbrowser
 from datetime import date
 from html import escape
+from io import BytesIO
 from pathlib import Path
 
 try:
     import markdown
 except ImportError:
     sys.exit("render.py: missing dependency 'markdown' -- run: pip install --user markdown")
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+MAX_IMAGE_SIDE = 1400       # longer side, in px; images are never upscaled past their own size
+JPEG_QUALITY = 82
+SMALL_IMAGE_BYTES = 200 * 1024   # images smaller than this on disk keep their original PNG bytes
+FULL_IMAGES = False         # set from --full-images in main(); disables downscaling entirely
 
 MD = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists"])
 COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
@@ -125,9 +136,36 @@ def split_sources(md_text):
         entries.extend(parse_sources(raw))
     return "\n".join(body).strip(), entries
 # ------------------------------------------------------------- html transform
+def downscale(data, mime):
+    """Resize+recompress a screenshot for embedding; return (mime, bytes) or None to keep as-is."""
+    if Image is None or FULL_IMAGES or not mime.startswith("image/") or len(data) < SMALL_IMAGE_BYTES:
+        return None
+    try:
+        img = Image.open(BytesIO(data))
+        img.load()
+    except Exception:
+        return None
+    w, h = img.size
+    longer = max(w, h)
+    if longer > MAX_IMAGE_SIDE:
+        scale = MAX_IMAGE_SIDE / longer
+        img = img.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+        rgba = img.convert("RGBA")
+        flat = Image.new("RGB", rgba.size, (255, 255, 255))
+        flat.paste(rgba, mask=rgba.split()[3])
+        img = flat
+    elif img.mode != "RGB":
+        img = img.convert("RGB")
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=JPEG_QUALITY)
+    return "image/jpeg", buf.getvalue()
+
 def data_uri(path):
-    return "data:%s;base64,%s" % (mimetypes.guess_type(path.name)[0] or "image/png",
-                                  base64.b64encode(path.read_bytes()).decode("ascii"))
+    data = path.read_bytes()
+    mime = mimetypes.guess_type(path.name)[0] or "image/png"
+    mime, data = downscale(data, mime) or (mime, data)
+    return "data:%s;base64,%s" % (mime, base64.b64encode(data).decode("ascii"))
 
 def resolve(ref, dirs):
     """Find a relative image reference inside the workspace; None if it is not there."""
@@ -533,7 +571,14 @@ def main():
     ap = argparse.ArgumentParser(description="Render a company workspace to one self-contained HTML page.")
     ap.add_argument("workspace", help="path to companies/<slug>")
     ap.add_argument("--open", action="store_true", dest="open_it", help="open the page in the browser")
+    ap.add_argument("--full-images", action="store_true", dest="full_images",
+                     help="embed screenshots at full size/PNG instead of downscaling to JPEG")
     args = ap.parse_args()
+    global FULL_IMAGES
+    FULL_IMAGES = args.full_images
+    if Image is None and not FULL_IMAGES:
+        print("render.py: Pillow not found, embedding full-size images -- pip install --user pillow",
+              file=sys.stderr)
     root = Path(args.workspace).expanduser().resolve()
     if not root.is_dir():
         sys.exit("render.py: no such workspace folder: %s" % root)

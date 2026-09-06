@@ -4,3 +4,4 @@
 youtube-transcript-api   # used by youtube.py for transcript fetching
 yt-dlp                   # used by youtube.py for search and as a transcript fallback
 markdown                 # used by render.py to convert Markdown to HTML
+pillow                   # used by render.py to downscale/recompress embedded screenshots
