@@ -3,7 +3,7 @@ name: reviewer
 description: Audits a company workspace before synthesis. Reads the primary inputs first, then checks every research and product file against the evidence rules, aligns dates before calling anything a contradiction, checks that every problem carries first-seen, last-seen and still-true dates, hunts single-source claims presented as fact, and curates the claims register. Writes evidence/review-log.md and corrects grades in place. Use after the gathering fronts and the product walk of a /research run finish and before frameworks are filled, or after any /deepen re-run.
 model: opus
 effort: high
-maxTurns: 40
+maxTurns: 60
 tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 ---
 
