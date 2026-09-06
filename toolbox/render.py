@@ -42,6 +42,8 @@ SOURCE_RE = re.compile(r"^\s*(?:[-*]\s+)?(?:\*\*|__|\*|_)?\s*sources?\s*:(?:\*\*
 BARE_URL_RE = re.compile(r'(?<![(<"\w])https?://[^\s<>)"\]]+')
 IMG_PATH_RE = re.compile(r"(?<![\w/\-.])((?:[\w.\-]+/)+[\w.\-]+\.(?:png|jpe?g|gif|webp))")
 SRC_RE = re.compile(r'src="([^"]+)"')
+TAGNAME_RE = re.compile(r"^</?([a-zA-Z][\w-]*)")
+LEAD_NUM_RE = re.compile(r"^(\d+)")
 GRADES = {"V": ("Verified", "g-v"), "R": ("Reported", "g-r"), "I": ("Inferred", "g-i"),
           "U": ("Unknown", "g-u"), "O": ("Opinion", "g-o")}
 DATE_KEYS = ("researched", "filled", "walked", "written", "curated", "updated")
@@ -174,8 +176,23 @@ def resolve(ref, dirs):
         return None
     return next((base / ref.lstrip("./") for base in dirs if (base / ref.lstrip("./")).is_file()), None)
 
-def img_html(path, cls="shot"):
-    return '<img class="%s" loading="lazy" alt="%s" src="%s">' % (cls, escape(path.name), data_uri(path))
+def img_html(path, cls="shot", id_attr=None):
+    return '<img%s class="%s" loading="lazy" alt="%s" src="%s">' % (
+        ' id="%s"' % escape(id_attr) if id_attr else "", cls, escape(path.name), data_uri(path))
+
+def shot_id(path):
+    """Stable element id for a gallery screenshot, used by screen-link lightbox lookups."""
+    return "shot-%s" % re.sub(r"[^A-Za-z0-9_-]+", "-", path.stem)
+
+def screen_label(stem):
+    """'11' from '11-onboarding-bonus-claimed', or the stem itself when there is no leading number."""
+    m = LEAD_NUM_RE.match(stem)
+    return m.group(1) if m else stem
+
+def screen_link_html(path):
+    """A small link that opens the existing lightbox on a screenshot already embedded in the gallery."""
+    return ('<a href="#" class="screen-link" data-shot="%s" onclick="return zoomShot(this)">screen %s</a>'
+            % (escape(shot_id(path)), escape(screen_label(path.stem))))
 
 def badge(letter):
     return '<span class="badge %s" title="%s">%s</span>' % (GRADES[letter][1], GRADES[letter][0], letter)
@@ -185,16 +202,24 @@ def cite(num, bid, nums):
     return ('<sup class="cite"><a href="#src-%s-%s">%s</a></sup>' % (bid, num, num)
             if bid and num in nums else '<sup class="cite">%s</sup>' % num)
 
-def inline_path(ref, dirs):
+def inline_path(ref, dirs, in_cell=False):
+    """A bare screenshot path found in running text: a gallery screen-link outside tables, an
+    inline thumbnail inside a table cell (unchanged behaviour), plain escaped text if unresolved."""
     target = resolve(ref, dirs)
-    return img_html(target, "inline-shot") if target else escape(ref)
+    if not target:
+        return escape(ref)
+    if not in_cell and target.parent.name == "screens" and target.suffix.lower() == ".png":
+        return screen_link_html(target)
+    return img_html(target, "inline-shot")
 
 def postprocess(text, dirs, bid=None, nums=frozenset()):
     """Badge grades, link citations, inline images; skip anything inside a tag or code."""
-    out, depth = [], 0
+    out, depth, cell = [], 0, 0
     for part in TAG_RE.split(text):
         if part.startswith("<"):
             low = part.lower()
+            name = TAGNAME_RE.match(part)
+            name = name.group(1).lower() if name else ""
             if low.startswith("<img"):
                 found = SRC_RE.search(part)
                 target = resolve(found.group(1), dirs) if found else None
@@ -203,13 +228,15 @@ def postprocess(text, dirs, bid=None, nums=frozenset()):
                 depth += 1
             elif low.startswith(("</pre", "</code")):
                 depth = max(0, depth - 1)
+            if name in ("td", "th"):
+                cell = cell + 1 if not part.startswith("</") else max(0, cell - 1)
             out.append(part)
             continue
         if depth == 0:
             part = GRADE_RE.sub(lambda m: badge(m.group(1)), part)
             part = MARKER_RE.sub(lambda m: cite(m.group(1), bid, nums), part)
             part = ASK_RE.sub('<span class="badge g-ask" title="Ask this in the room">ask</span>', part)
-            part = IMG_PATH_RE.sub(lambda m: inline_path(m.group(1), dirs), part)
+            part = IMG_PATH_RE.sub(lambda m: inline_path(m.group(1), dirs, cell > 0), part)
         out.append(part)
     return "".join(out)
 
@@ -428,7 +455,7 @@ def overview(doc, dirs, root, path):
 def gallery(screens_dir):
     shots = sorted(screens_dir.glob("*.png")) if screens_dir.is_dir() else []
     cells = ['<button class="thumb" type="button" onclick="zoom(this)">%s<span>%s</span></button>'
-             % (img_html(shot), escape(shot.stem)) for shot in shots]
+             % (img_html(shot, "shot", shot_id(shot)), escape(shot.stem)) for shot in shots]
     return ('<div class="strip">%s</div>' % "".join(cells) if shots
             else '<p class="note">No screenshots in <code>product/screens/</code>.</p>')
 
@@ -523,6 +550,7 @@ details.ftable{font-size:.9rem} details.ftable summary{font-weight:500;color:var
 .thumb{flex:0 0 auto;width:160px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35rem;cursor:zoom-in;font:inherit;color:var(--mut)}
 .thumb img{display:block;width:100%;height:96px;object-fit:cover;border-radius:4px;background:var(--shade)}
 .thumb span{display:block;font-size:.72rem;margin-top:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .inline-shot{max-height:110px;border:1px solid var(--line);border-radius:4px;vertical-align:middle}
+.screen-link{font-size:.85em;white-space:nowrap;text-decoration:underline dotted}
 #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out} #lightbox.on{display:flex} #lightbox img{max-width:92vw;max-height:92vh}
 details{border:1px solid var(--line);border-radius:8px;background:var(--card);margin:.5rem 0;padding:.2rem .8rem} summary{cursor:pointer;font-weight:650;padding:.5rem 0} summary .date{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:.4rem}
 .sub-section{margin-bottom:2rem} .sub-section>h3{font-size:1.1rem;margin:1.2rem 0 .6rem;padding-bottom:.2rem;border-bottom:1px solid var(--line)}
@@ -543,6 +571,7 @@ footer{border-top:1px solid var(--line);padding:1rem 1.2rem;color:var(--mut);fon
 JS = """
 var box=document.getElementById('lightbox');
 function zoom(el){box.querySelector('img').src=el.querySelector('img').src;box.classList.add('on');}
+function zoomShot(el){var img=document.getElementById(el.getAttribute('data-shot'));if(img){box.querySelector('img').src=img.src;box.classList.add('on');}return false;}
 box.addEventListener('click',function(){box.classList.remove('on');});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){box.classList.remove('on');}});
 window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
