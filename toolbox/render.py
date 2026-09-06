@@ -4,9 +4,10 @@
 Usage:
   python toolbox/render.py companies/<slug> [--open]
 
-Writes companies/<slug>/site/index.html: one page to screen-share in an interview.
-Images are inlined as data URIs, so the file works with no network and no CDN.
-Missing files are skipped with a note in the page; only a missing workspace is fatal.
+Writes companies/<slug>/site/index.html: one page to screen-share in an interview. Images are
+inlined as data URIs, so the file works with no network and no CDN. Missing files are skipped
+with a note in the page; only a missing workspace is fatal. A "Sources:" line inside a section
+or canvas box becomes a small footer; [1]-style markers in the text link into it.
 
 Dependency: markdown (pip install --user markdown). Everything else is stdlib.
 """
@@ -25,6 +26,9 @@ COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
 TAG_RE = re.compile(r"(<[^>]+>)")
 GRADE_RE = re.compile(r"\[(V|R|I|U|O)\]")
 ASK_RE = re.compile(r"\(ask\)")
+MARKER_RE = re.compile(r"\[(\d{1,3})\]")
+SOURCE_RE = re.compile(r"^\s*(?:[-*]\s+)?(?:\*\*|__|\*|_)?\s*sources?\s*:(?:\*\*|__|\*|_)?\s*(.*)$", re.I)
+BARE_URL_RE = re.compile(r'(?<![(<"\w])https?://[^\s<>)"\]]+')
 IMG_PATH_RE = re.compile(r"(?<![\w/\-.])((?:[\w.\-]+/)+[\w.\-]+\.(?:png|jpe?g|gif|webp))")
 SRC_RE = re.compile(r'src="([^"]+)"')
 GRADES = {"V": ("Verified", "g-v"), "R": ("Reported", "g-r"), "I": ("Inferred", "g-i"),
@@ -33,14 +37,16 @@ DATE_KEYS = ("researched", "filled", "walked", "written", "curated", "updated")
 COLORS = ["#2563eb", "#d97706", "#059669", "#dc2626", "#7c3aed", "#0891b2", "#c026d3", "#65a30d"]
 RESEARCH_ORDER = ["business", "money", "people", "users", "culture", "market"]
 LEAN_AREAS = [("problem", "Problem"), ("solution", "Solution"), ("uvp", "Unique value proposition"),
-              ("advantage", "Unfair advantage"), ("segments", "Customer segments"),
-              ("metrics", "Key metrics"), ("channels", "Channels"),
-              ("cost", "Cost structure"), ("revenue", "Revenue streams")]
+              ("advantage", "Unfair advantage"), ("segments", "Customer segments"), ("metrics", "Key metrics"),
+              ("channels", "Channels"), ("cost", "Cost structure"), ("revenue", "Revenue streams")]
 LEAN_KEYS = [("unique value", "uvp"), ("unfair", "advantage"), ("customer segment", "segments"),
-             ("key metric", "metrics"), ("channel", "channels"), ("cost", "cost"),
-             ("revenue", "revenue"), ("problem", "problem"), ("solution", "solution")]
+             ("key metric", "metrics"), ("channel", "channels"), ("cost", "cost"), ("revenue", "revenue"),
+             ("problem", "problem"), ("solution", "solution")]
 SWOT_KEYS = ["strengths", "weaknesses", "opportunities", "threats"]
 AARRR_KEYS = ["acquisition", "activation", "retention", "revenue", "referral"]
+OVERVIEW_ORDER = ["in five lines", "open items", "read in this order", "frameworks"]
+OVERVIEW_FOLD = ["files", "changelog"]
+BOX = [0]
 # ---------------------------------------------------------------- markdown io
 def read_md(path):
     """Return (meta, body) with front matter and HTML comments stripped, or None."""
@@ -59,12 +65,8 @@ def read_md(path):
     return meta, COMMENT_RE.sub("", text).strip()
 
 def subtitle(meta):
-    bits = []
-    if meta.get("title"):
-        bits.append(escape(meta["title"]))
-    for key in DATE_KEYS:
-        if meta.get(key):
-            bits.append("%s %s" % (key, escape(meta[key])))
+    bits = [escape(meta["title"])] if meta.get("title") else []
+    bits += ["%s %s" % (key, escape(meta[key])) for key in DATE_KEYS if meta.get(key)]
     return '<p class="sub">%s</p>' % " &middot; ".join(bits) if bits else ""
 
 def first_h1(body, fallback):
@@ -96,36 +98,61 @@ def pick(sections, needle):
         if needle in head.lower():
             return text
     return ""
+# ------------------------------------------------------------------- sources
+def parse_sources(raw):
+    """Split a sources footer into [(number, text), ...]; number is '' when unnumbered."""
+    clean = lambda t: " ".join(l.strip().lstrip("-*").strip() for l in t.splitlines()).strip(" ;,")
+    parts = MARKER_RE.split(raw)
+    if len(parts) == 1:
+        return [("", clean(raw))] if clean(raw) else []
+    return [(parts[i], clean(parts[i + 1])) for i in range(1, len(parts) - 1, 2) if clean(parts[i + 1])]
+
+def split_sources(md_text):
+    """Return (body markdown, footer entries) by pulling 'Sources:' out of each block."""
+    chunks, cur = [], []
+    for line in md_text.splitlines():
+        if line.startswith("#") and cur:
+            chunks.append(cur)
+            cur = []
+        cur.append(line)
+    body, entries = [], []
+    for chunk in chunks + [cur]:
+        cut = next((i for i, line in enumerate(chunk) if SOURCE_RE.match(line)), None)
+        body.extend(chunk if cut is None else chunk[:cut])
+        if cut is None:
+            continue
+        raw = SOURCE_RE.match(chunk[cut]).group(1) + "\n" + "\n".join(chunk[cut + 1:])
+        entries.extend(parse_sources(raw))
+    return "\n".join(body).strip(), entries
 # ------------------------------------------------------------- html transform
 def data_uri(path):
-    kind = mimetypes.guess_type(path.name)[0] or "image/png"
-    return "data:%s;base64,%s" % (kind, base64.b64encode(path.read_bytes()).decode("ascii"))
+    return "data:%s;base64,%s" % (mimetypes.guess_type(path.name)[0] or "image/png",
+                                  base64.b64encode(path.read_bytes()).decode("ascii"))
 
 def resolve(ref, dirs):
     """Find a relative image reference inside the workspace; None if it is not there."""
     ref = ref.replace("\\", "/")
     if ref.startswith(("http:", "https:", "data:", "/")):
         return None
-    ref = ref.lstrip("./")
-    for base in dirs:
-        cand = base / ref
-        if cand.is_file():
-            return cand
-    return None
+    return next((base / ref.lstrip("./") for base in dirs if (base / ref.lstrip("./")).is_file()), None)
 
 def img_html(path, cls="shot"):
     return '<img class="%s" loading="lazy" alt="%s" src="%s">' % (cls, escape(path.name), data_uri(path))
 
 def badge(letter):
-    label, cls = GRADES[letter]
-    return '<span class="badge %s" title="%s">%s</span>' % (cls, label, letter)
+    return '<span class="badge %s" title="%s">%s</span>' % (GRADES[letter][1], GRADES[letter][0], letter)
+
+def cite(num, bid, nums):
+    """A [1] marker: a superscript link into this box's footer, or a plain superscript."""
+    return ('<sup class="cite"><a href="#src-%s-%s">%s</a></sup>' % (bid, num, num)
+            if bid and num in nums else '<sup class="cite">%s</sup>' % num)
 
 def inline_path(ref, dirs):
     target = resolve(ref, dirs)
     return img_html(target, "inline-shot") if target else escape(ref)
 
-def postprocess(text, dirs):
-    """Badge the grades and inline the images, skipping anything inside a tag or code."""
+def postprocess(text, dirs, bid=None, nums=frozenset()):
+    """Badge grades, link citations, inline images; skip anything inside a tag or code."""
     out, depth = [], 0
     for part in TAG_RE.split(text):
         if part.startswith("<"):
@@ -142,28 +169,43 @@ def postprocess(text, dirs):
             continue
         if depth == 0:
             part = GRADE_RE.sub(lambda m: badge(m.group(1)), part)
+            part = MARKER_RE.sub(lambda m: cite(m.group(1), bid, nums), part)
             part = ASK_RE.sub('<span class="badge g-ask" title="Ask this in the room">ask</span>', part)
             part = IMG_PATH_RE.sub(lambda m: inline_path(m.group(1), dirs), part)
         out.append(part)
     return "".join(out)
 
+def inline_md(text, dirs):
+    """One line of markdown to inline HTML, with every link opening in a new tab."""
+    MD.reset()
+    html = MD.convert(BARE_URL_RE.sub(lambda m: "<%s>" % m.group(0), text)).strip().replace("</p>\n<p>", "<br>")
+    html = postprocess(html[3:-4] if html.startswith("<p>") and html.endswith("</p>") else html, dirs)
+    return html.replace('<a href="http', '<a target="_blank" rel="noopener" href="http')
+
+def sources_html(entries, bid, dirs):
+    """The footer block: one anchored line per numbered source, links opening in a new tab."""
+    rows = ['<p%s>%s%s</p>' % (' id="src-%s-%s"' % (bid, num) if num else "",
+                               '<span class="n">%s</span>' % escape(num) if num else "",
+                               inline_md(text, dirs)) for num, text in entries]
+    return '<div class="sources"><span class="slab">Sources</span>%s</div>' % "".join(rows)
+
 def to_html(md_text, dirs):
+    """Markdown to HTML, with any 'Sources:' block moved to a footer and citations linked."""
     if not md_text.strip():
         return '<p class="note">Nothing under this heading yet.</p>'
+    body, entries = split_sources(md_text)
+    cited = bool(entries) or bool(MARKER_RE.search(body))
+    BOX[0], bid = BOX[0] + cited, ("b%d" % (BOX[0] + 1) if cited else None)
     MD.reset()
-    out = MD.convert(md_text)
-    out = out.replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
-    return postprocess(out, dirs)
+    out = MD.convert(body).replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
+    out = postprocess(out, dirs, bid, frozenset(n for n, _ in entries))
+    return out + (sources_html(entries, bid, dirs) if entries else "")
 
 def section(sid, title, inner, cls=""):
-    return ('<section id="%s" class="%s">\n<h2>%s</h2>\n%s\n</section>\n'
-            % (sid, cls, escape(title), inner))
+    return '<section id="%s" class="%s"><h2>%s</h2>%s</section>' % (sid, cls, escape(title), inner)
 
 def missing(path, root):
-    try:
-        shown = path.relative_to(root).as_posix()
-    except ValueError:
-        shown = path.name
+    shown = path.name if root not in path.parents else path.relative_to(root).as_posix()
     return '<p class="note missing">Not in the workspace: <code>%s</code></p>' % escape(shown)
 
 def strip_h1(body):
@@ -176,11 +218,9 @@ def lean_canvas(doc, dirs, root, path):
     _, sections = split_sections(body)
     found = {}
     for head, text in sections:
-        low = head.lower()
-        for needle, area in LEAN_KEYS:
-            if needle in low and area not in found:
-                found[area] = text
-                break
+        area = next((a for n, a in LEAN_KEYS if n in head.lower() and a not in found), None)
+        if area:
+            found[area] = text
     boxes = ['<div class="canvas-box a-%s"><h3>%s</h3>%s</div>' % (area, escape(label),
              to_html(found.get(area, ""), dirs)) for area, label in LEAN_AREAS]
     return subtitle(meta) + '<div class="lean">%s</div>' % "".join(boxes)
@@ -206,7 +246,7 @@ def aarrr(doc, dirs, root, path):
     return subtitle(meta) + '<div class="stages">%s</div>%s' % ("".join(cards), tail)
 
 def parse_factor_table(md_text):
-    """Return (factors, companies, scores) parsed from the first markdown table."""
+    """Return (factors, companies, scores, evidence) parsed from the first markdown table."""
     rows = []
     for line in md_text.splitlines():
         line = line.strip()
@@ -218,47 +258,67 @@ def parse_factor_table(md_text):
         elif rows:
             break
     if len(rows) < 2:
-        return [], [], []
-    companies = [c for c in rows[0][1:] if c and "evidence" not in c.lower()]
-    factors, scores = [], []
+        return [], [], [], []
+    head = rows[0]
+    companies = [c for c in head[1:] if c and "evidence" not in c.lower()]
+    ev_col = next((i for i, c in enumerate(head) if "evidence" in c.lower()), None)
+    factors, scores, evidence = [], [], []
+    score_of = lambda cell: next((int(m) for m in re.findall(r"\d+", cell) if 1 <= int(m) <= 5), None)
     for row in rows[1:]:
-        vals = []
-        for cell in row[1:1 + len(companies)]:
-            hit = re.search(r"\d+", cell)
-            val = int(hit.group()) if hit else None
-            vals.append(val if val is not None and 1 <= val <= 5 else None)
+        vals = [score_of(cell) for cell in row[1:1 + len(companies)]]
         if row[0] and any(v is not None for v in vals):
             factors.append(row[0])
             scores.append(vals)
-    return factors, companies, scores
+            evidence.append(row[ev_col] if ev_col is not None and ev_col < len(row) else "")
+    return factors, companies, scores, evidence
 
-def chart_svg(factors, companies, scores):
-    w, h, left, right, top, bottom = 860, 380, 58, 200, 20, 66
+def wrap_label(text, width=16, lines=3):
+    """Wrap an axis label over at most `lines` rows; the tail folds in, it is never truncated."""
+    out = [""]
+    for word in text.split():
+        if out[-1] and len(out[-1]) + 1 + len(word) > width:
+            out.append(word)
+        else:
+            out[-1] = (out[-1] + " " + word).strip()
+    if len(out) > lines:
+        out = out[:lines - 1] + [" ".join(out[lines - 1:])]
+    return [r for r in out if r] or [text]
+
+def chart_svg(factors, companies, scores, evidence):
+    w, h, left, right, top, bottom = 1080, 680, 74, 240, 40, 130
     x1, y1 = w - right, h - bottom
     n = len(factors)
     xs = [left + (x1 - left) * (i / (n - 1)) if n > 1 else (left + x1) / 2 for i in range(n)]
     ypos = lambda v: y1 - (v - 1) / 4 * (y1 - top)
-    out = ['<svg class="chart" viewBox="0 0 %d %d" role="img" aria-label="Strategy canvas">' % (w, h)]
+    out = ['<svg class="chart" viewBox="0 0 %d %d" width="%d" height="%d" preserveAspectRatio='
+           '"xMidYMid meet" role="img" aria-label="Strategy canvas">' % (w, h, w, h)]
     for score in range(1, 6):
         y = ypos(score)
-        out.append('<line class="grid" x1="%d" y1="%.1f" x2="%d" y2="%.1f"/>' % (left, y, x1, y))
-        out.append('<text class="ax" x="%d" y="%.1f" text-anchor="end">%d</text>' % (left - 10, y + 4, score))
+        out.append('<line class="grid" x1="%d" y1="%.1f" x2="%d" y2="%.1f"/>'
+                   '<text class="ax" x="%d" y="%.1f" text-anchor="end">%d</text>'
+                   % (left, y, x1, y, left - 14, y + 6, score))
     for i, factor in enumerate(factors):
-        label = factor if len(factor) <= 16 else factor[:15] + "…"
-        out.append('<text class="ax" x="%.1f" y="%d" text-anchor="middle">%s<title>%s</title></text>'
-                   % (xs[i], y1 + 22, escape(label), escape(factor)))
+        spans = "".join('<tspan x="%.1f" dy="%d">%s</tspan>' % (xs[i], 0 if k == 0 else 19, escape(r))
+                        for k, r in enumerate(wrap_label(factor)))
+        out.append('<text class="ax fx" x="%.1f" y="%d" text-anchor="middle">%s<title>%s</title></text>'
+                   % (xs[i], y1 + 30, spans, escape(factor)))
     for j, company in enumerate(companies):
         color = COLORS[j % len(COLORS)]
-        pts = [(xs[i], ypos(scores[i][j])) for i in range(n) if scores[i][j] is not None]
+        pts = [(xs[i], ypos(scores[i][j]), i) for i in range(n) if scores[i][j] is not None]
         if not pts:
             continue
-        out.append('<polyline fill="none" stroke="%s" stroke-width="2.5" points="%s"/>'
-                   % (color, " ".join("%.1f,%.1f" % p for p in pts)))
-        for px, py in pts:
-            out.append('<circle cx="%.1f" cy="%.1f" r="3.5" fill="%s"/>' % (px, py, color))
-        ly = top + 18 + j * 22
-        out.append('<rect x="%d" y="%d" width="12" height="12" rx="2" fill="%s"/>' % (x1 + 26, ly - 10, color))
-        out.append('<text class="ax" x="%d" y="%d">%s</text>' % (x1 + 44, ly, escape(company[:22])))
+        out.append('<polyline fill="none" stroke="%s" stroke-width="4" stroke-linejoin="round" '
+                   'points="%s"/>' % (color, " ".join("%.1f,%.1f" % (p[0], p[1]) for p in pts)))
+        for px, py, i in pts:
+            tip = "%s: %s\n%s" % (company, scores[i][j], factors[i])
+            if evidence and evidence[i]:
+                tip += "\n%s" % evidence[i]
+            out.append('<circle class="pt" cx="%.1f" cy="%.1f" r="6" fill="%s"><title>%s</title></circle>'
+                       % (px, py, color, escape(tip)))
+        ly = top + 24 + j * 30
+        out.append('<rect x="%d" y="%d" width="16" height="16" rx="3" fill="%s"/>' % (x1 + 34, ly - 13, color))
+        out.append('<text class="ax lg" x="%d" y="%d">%s<title>%s</title></text>'
+                   % (x1 + 58, ly, escape(company), escape(company)))
     out.append("</svg>")
     return "".join(out)
 
@@ -268,15 +328,17 @@ def strategy_canvas(doc, dirs, root, path):
     meta, body = doc
     lead, sections = split_sections(body)
     table_md = pick(sections, "factor table")
-    factors, companies, scores = parse_factor_table(table_md)
+    factors, companies, scores, evidence = parse_factor_table(table_md)
     if factors and companies:
-        chart = chart_svg(factors, companies, scores)
+        chart = ('<div class="chart-wrap">%s</div>' % chart_svg(factors, companies, scores, evidence)
+                 + '<details class="ftable"><summary>Factor table and evidence</summary>%s</details>'
+                 % to_html(table_md, dirs))
     else:
         chart = ('<p class="note">No numeric factor table found; the file is shown as written.</p>'
                  + to_html(table_md, dirs))
     rest = "".join('<h3>%s</h3>%s' % (escape(head), to_html(text, dirs))
                    for head, text in sections if "factor table" not in head.lower())
-    return subtitle(meta) + to_html(lead, dirs) + chart + '<div class="prose">%s</div>' % rest
+    return subtitle(meta) + to_html(lead, dirs) + chart + '<div class="prose cols">%s</div>' % rest
 # ------------------------------------------------------------- plain sections
 def prose(doc, dirs, root, path, cls="prose"):
     if not doc:
@@ -284,31 +346,66 @@ def prose(doc, dirs, root, path, cls="prose"):
     meta, body = doc
     return subtitle(meta) + '<div class="%s">%s</div>' % (cls, to_html(strip_h1(body), dirs))
 
+def kv_grid(lead, dirs):
+    """Pull the leading identity table out of index.md into a key/value grid."""
+    rows, rest = [], []
+    for line in lead.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip()[:1] == "|" else None
+        if cells is None:
+            rest.append(line)
+        elif cells[0] and len(cells) > 1 and not all(not c or set(c) <= set("-: ") for c in cells):
+            rows.append((cells[0], " ".join(cells[1:]).strip()))
+    grid = '<div class="idgrid">%s</div>' % "".join(
+        '<div class="k">%s</div><div class="v">%s</div>' % (inline_md(k, dirs), inline_md(v, dirs))
+        for k, v in rows) if rows else ""
+    return grid, "\n".join(rest).strip()
+
+def overview(doc, dirs, root, path):
+    """index.md reordered: identity grid, the ordered headings, Files and Changelog folded away."""
+    if not doc:
+        return missing(path, root)
+    meta, body = doc
+    lead, sections = split_sections(strip_h1(body))
+    grid, lead_rest = kv_grid(lead, dirs)
+    head_html = lambda h, t: '<h3>%s</h3><div class="prose">%s</div>' % (escape(h), to_html(t, dirs))
+    out = [subtitle(meta), grid]
+    if lead_rest:
+        out.append('<div class="prose">%s</div>' % to_html(lead_rest, dirs))
+    taken, folded = set(), []
+    for needle in OVERVIEW_ORDER:
+        hit = next((i for i, (h, _) in enumerate(sections) if needle in h.lower() and i not in taken), None)
+        if hit is not None:
+            taken.add(hit)
+            out.append(head_html(*sections[hit]))
+    for i, (head, text) in enumerate(sections):
+        if i in taken:
+            continue
+        if any(key in head.lower() for key in OVERVIEW_FOLD):
+            folded.append('<details><summary>%s</summary><div class="prose">%s</div></details>'
+                          % (escape(head), to_html(text, dirs)))
+        else:
+            out.append(head_html(head, text))
+    return "".join(out + folded)
+
 def gallery(screens_dir):
     shots = sorted(screens_dir.glob("*.png")) if screens_dir.is_dir() else []
-    if not shots:
-        return '<p class="note">No screenshots in <code>product/screens/</code>.</p>'
     cells = ['<button class="thumb" type="button" onclick="zoom(this)">%s<span>%s</span></button>'
              % (img_html(shot), escape(shot.stem)) for shot in shots]
-    return '<div class="strip">%s</div>' % "".join(cells)
+    return ('<div class="strip">%s</div>' % "".join(cells) if shots
+            else '<p class="note">No screenshots in <code>product/screens/</code>.</p>')
 
-def research(root, dirs):
-    out = []
-    for i, front in enumerate(RESEARCH_ORDER):
+def raw_material(root, dirs):
+    """The six research files, every one collapsed: reference behind the pages above."""
+    out = ['<p class="note">Evidence the pages above cite. Reference, not reading.</p>']
+    for front in RESEARCH_ORDER:
         path = root / "research" / ("%s.md" % front)
         doc = read_md(path)
-        open_attr = " open" if i == 0 else ""
-        if not doc:
-            out.append('<details%s id="research-%s"><summary>%s <span class="date">missing</span>'
-                       '</summary>%s</details>'
-                       % (open_attr, front, front.capitalize(), missing(path, root)))
-            continue
-        meta, body = doc
-        when = meta.get("researched", "")
-        out.append('<details%s id="research-%s"><summary>%s <span class="date">%s</span></summary>'
-                   '<div class="prose">%s</div></details>'
-                   % (open_attr, front, escape(meta.get("title") or front.capitalize()),
-                      escape("researched %s" % when if when else "no date"), to_html(strip_h1(body), dirs)))
+        meta, body = doc if doc else ({}, "")
+        when = "researched %s" % meta["researched"] if meta.get("researched") else "no date"
+        inner = ('<div class="prose">%s</div>' % to_html(strip_h1(body), dirs)) if doc else missing(path, root)
+        out.append('<details id="research-%s"><summary>%s <span class="date">%s</span></summary>%s</details>'
+                   % (front, escape(meta.get("title") or front.capitalize()),
+                      escape(when if doc else "missing"), inner))
     return "".join(out)
 # ----------------------------------------------------------------------- page
 def build(root):
@@ -322,18 +419,18 @@ def build(root):
         nav.append((sid, label))
         blocks.append(section(sid, title, inner, cls))
 
-    add("overview", "Overview", "Overview", prose(index, dirs, root, root / "index.md"))
+    add("overview", "Overview", "Overview", overview(index, dirs, root, root / "index.md"))
     add("point-of-view", "Point of view", "Point of view",
         prose(read_md(root / "point-of-view.md"), dirs, root, root / "point-of-view.md", "prose pov"),
         "feature")
 
     canvases = [
-        ("lean-canvas", "Lean Canvas",
-         lean_canvas(read_md(fw / "lean-canvas.md"), dirs, root, fw / "lean-canvas.md")),
-        ("swot", "SWOT", swot(read_md(fw / "swot.md"), dirs, root, fw / "swot.md")),
-        ("aarrr", "AARRR funnel", aarrr(read_md(fw / "aarrr.md"), dirs, root, fw / "aarrr.md")),
         ("strategy-canvas", "Strategy canvas",
          strategy_canvas(read_md(fw / "strategy-canvas.md"), dirs, root, fw / "strategy-canvas.md")),
+        ("swot", "SWOT", swot(read_md(fw / "swot.md"), dirs, root, fw / "swot.md")),
+        ("lean-canvas", "Lean Canvas",
+         lean_canvas(read_md(fw / "lean-canvas.md"), dirs, root, fw / "lean-canvas.md")),
+        ("aarrr", "AARRR funnel", aarrr(read_md(fw / "aarrr.md"), dirs, root, fw / "aarrr.md")),
     ]
     nav.append(("canvases", "Canvases"))
     inner = "".join('<div class="sub-section" id="%s"><h3>%s</h3>%s</div>' % (sid, escape(label), html)
@@ -346,11 +443,11 @@ def build(root):
                + "<h3>Onboarding and activation teardown</h3>"
                + prose(read_md(prod / "onboarding-teardown.md"), dirs, root, prod / "onboarding-teardown.md"))
     add("product", "Product", "Product", product, "wide")
-    add("research", "Research", "Research", research(root, dirs))
     add("claims", "Claims register", "Claims register",
         prose(read_md(root / "claims-register.md"), dirs, root, root / "claims-register.md"), "wide")
     add("decisions", "Decisions", "Decisions",
         prose(read_md(root / "decisions.md"), dirs, root, root / "decisions.md"), "wide")
+    add("raw-material", "Raw material", "Raw material", raw_material(root, dirs))
 
     links = "".join('<li><a href="#%s">%s</a></li>' % (sid, escape(label)) for sid, label in nav)
     return PAGE % {"title": escape(company), "nav": links, "body": "".join(blocks),
@@ -363,46 +460,46 @@ CSS = """
 body{margin:0;background:var(--bg);color:var(--fg);overflow-x:hidden;font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 h1,h2,h3,h4{line-height:1.25;font-weight:650} h1{font-size:1.6rem;margin:0} h2{font-size:1.35rem;margin:0 0 .4rem} h3{font-size:1.02rem;margin:1.4rem 0 .4rem} a{color:var(--accent)}
 .top{position:sticky;top:0;z-index:9;background:var(--card);border-bottom:1px solid var(--line);padding:.7rem 1.2rem;display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap} .top .sub{margin:0}
-.shell{display:grid;grid-template-columns:216px minmax(0,1fr);gap:2rem;max-width:1240px;margin:0 auto;padding:1.2rem} main{min-width:0}
-nav{position:sticky;top:3.4rem;align-self:start;max-height:calc(100vh - 4rem);overflow:auto} nav ul{list-style:none;margin:0;padding:0}
-nav a{display:block;padding:.24rem .5rem;border-radius:5px;text-decoration:none;color:var(--mut);font-size:.88rem} nav a:hover{background:var(--shade);color:var(--fg)}
-section{margin:0 0 2.6rem;padding-top:.6rem;border-top:1px solid var(--line)} section:first-of-type{border-top:0}
-.prose{max-width:70ch} .feature .prose{max-width:74ch;font-size:1.06rem} .feature h3{margin-top:1.6rem;color:var(--accent)}
+.shell{display:grid;grid-template-columns:216px minmax(0,1fr);gap:2rem;max-width:1240px;margin:0 auto;padding:1.2rem} main{min-width:0} nav ul{list-style:none;margin:0;padding:0}
+nav{position:sticky;top:3.4rem;align-self:start;max-height:calc(100vh - 4rem);overflow:auto} nav a{display:block;padding:.24rem .5rem;border-radius:5px;text-decoration:none;color:var(--mut);font-size:.88rem} nav a:hover{background:var(--shade);color:var(--fg)}
+section{margin:0 0 2.6rem;padding-top:.6rem;border-top:1px solid var(--line)} section:first-of-type{border-top:0} .prose{max-width:70ch}
+.feature .prose{max-width:74ch;font-size:1.06rem} .feature h3{margin-top:1.6rem;color:var(--accent)} .cols{max-width:none;column-count:2;column-gap:2.4rem} .cols h3{margin-top:0;break-after:avoid} .cols>*{break-inside:avoid}
 .sub{margin:.1rem 0 1rem;color:var(--mut);font-size:.8rem} .note{color:var(--mut);font-size:.86rem;font-style:italic} .missing{border-left:3px solid var(--line);padding-left:.6rem}
 .table-wrap{overflow-x:auto;max-width:100%;margin:.8rem 0;border:1px solid var(--line);border-radius:8px} table{border-collapse:collapse;font-size:.88rem;min-width:100%} th,td{border-bottom:1px solid var(--line);padding:.4rem .6rem;text-align:left;vertical-align:top} th{background:var(--shade);white-space:nowrap}
 code{background:var(--shade);padding:.1em .3em;border-radius:4px;font-size:.88em} img{max-width:100%;height:auto} blockquote{margin:.8rem 0;padding-left:.8rem;border-left:3px solid var(--line);color:var(--mut)}
-.badge{display:inline-block;min-width:1.15em;padding:0 .32em;margin:0 .12em;border-radius:4px;font-size:.72em;font-weight:700;line-height:1.5;text-align:center;color:#fff;vertical-align:.08em}
-.g-v{background:#15803d}.g-r{background:#b45309}.g-i{background:#1d4ed8}.g-u{background:#6b7280}.g-o{background:#7c3aed}.g-ask{background:#0f766e;padding:0 .4em}
+.badge{display:inline-block;min-width:1.15em;padding:0 .32em;margin:0 .12em;border-radius:4px;font-size:.72em;font-weight:700;line-height:1.5;text-align:center;color:#fff;vertical-align:.08em} .g-v{background:#15803d}.g-r{background:#b45309}.g-i{background:#1d4ed8}.g-u{background:#6b7280}.g-o{background:#7c3aed}.g-ask{background:#0f766e;padding:0 .4em}
+sup.cite{font-size:.68em;line-height:0;font-weight:600;margin-left:.05em} sup.cite a{text-decoration:none}
+.sources{margin-top:.7rem;padding-top:.45rem;border-top:1px solid var(--line);color:var(--mut);font-size:.76rem;line-height:1.4} .sources p{margin:.16rem 0} .sources .n{font-weight:700;margin-right:.35rem} .sources a{word-break:break-word}
+.sources .slab{display:block;text-transform:uppercase;letter-spacing:.06em;font-size:.66rem;margin-bottom:.25rem}
+.idgrid{display:grid;grid-template-columns:minmax(8rem,14%) minmax(0,1fr);gap:0 1.1rem;margin:.4rem 0 1.4rem;max-width:96ch} .idgrid .k{font-weight:650;font-size:.82rem;color:var(--mut)} .idgrid .k,.idgrid .v{padding:.4rem 0;border-top:1px solid var(--line)} .idgrid .v{font-size:.9rem}
 .lean{display:grid;gap:.6rem;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-areas:"problem solution uvp advantage segments" "problem metrics uvp channels segments" "cost cost cost revenue revenue"}
-.a-problem{grid-area:problem}.a-solution{grid-area:solution}.a-uvp{grid-area:uvp}.a-advantage{grid-area:advantage}.a-segments{grid-area:segments}
-.a-metrics{grid-area:metrics}.a-channels{grid-area:channels}.a-cost{grid-area:cost}.a-revenue{grid-area:revenue}
-.canvas-box,.swot-box,.stage,.asks{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;font-size:.86rem;overflow:hidden}
+.a-problem{grid-area:problem}.a-solution{grid-area:solution}.a-uvp{grid-area:uvp}.a-advantage{grid-area:advantage}.a-segments{grid-area:segments}.a-metrics{grid-area:metrics}.a-channels{grid-area:channels}.a-cost{grid-area:cost}.a-revenue{grid-area:revenue}
+.canvas-box,.swot-box,.stage,.asks{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;font-size:.86rem} .canvas-box,.swot-box{line-height:1.38;max-height:60vh;overflow-y:auto}
 .canvas-box h3,.swot-box h3,.stage h3{margin:0 0 .3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
-.canvas-box ul,.swot-box ul,.stage ul{padding-left:1.1rem;margin:.3rem 0} .canvas-box p,.swot-box p,.stage p{margin:.3rem 0}
+.canvas-box ul,.swot-box ul,.stage ul{padding-left:1.1rem;margin:.25rem 0} .canvas-box li,.swot-box li{margin:.18rem 0} .canvas-box p,.swot-box p,.stage p{margin:.3rem 0}
 .swot{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))} .s-strengths{border-top:3px solid #15803d}.s-weaknesses{border-top:3px solid #b91c1c}.s-opportunities{border-top:3px solid #1d4ed8}.s-threats{border-top:3px solid #b45309}
-.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 175px} .asks{margin-top:.8rem}
-.chart{width:100%;height:auto;max-width:900px;display:block;margin:.6rem 0} .chart .grid{stroke:var(--line)} .chart .ax{fill:var(--mut);font-size:11px;font-family:inherit}
-.strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
+.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 175px} .asks{margin-top:.8rem} .strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem .4rem;margin:.8rem 0 1rem} .chart{width:100%;height:auto;min-height:560px;display:block} .chart .grid{stroke:var(--line)}
+.chart .ax{fill:var(--mut);font-size:14px;font-family:inherit} .chart .fx{fill:var(--fg);font-size:13px} .chart .lg{font-size:15px;fill:var(--fg)} .chart .pt{cursor:pointer} .chart .pt:hover{r:9}
+details.ftable{font-size:.9rem} details.ftable summary{font-weight:500;color:var(--mut)}
 .thumb{flex:0 0 auto;width:160px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35rem;cursor:zoom-in;font:inherit;color:var(--mut)}
 .thumb img{display:block;width:100%;height:96px;object-fit:cover;border-radius:4px;background:var(--shade)}
-.thumb span{display:block;font-size:.72rem;margin-top:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.inline-shot{max-height:110px;border:1px solid var(--line);border-radius:4px;vertical-align:middle}
-#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
-#lightbox.on{display:flex} #lightbox img{max-width:92vw;max-height:92vh}
-details{border:1px solid var(--line);border-radius:8px;background:var(--card);margin:.5rem 0;padding:.2rem .8rem}
-summary{cursor:pointer;font-weight:650;padding:.5rem 0} summary .date{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:.4rem}
+.thumb span{display:block;font-size:.72rem;margin-top:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .inline-shot{max-height:110px;border:1px solid var(--line);border-radius:4px;vertical-align:middle}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out} #lightbox.on{display:flex} #lightbox img{max-width:92vw;max-height:92vh}
+details{border:1px solid var(--line);border-radius:8px;background:var(--card);margin:.5rem 0;padding:.2rem .8rem} summary{cursor:pointer;font-weight:650;padding:.5rem 0} summary .date{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:.4rem}
 .sub-section{margin-bottom:2rem} .sub-section>h3{font-size:1.1rem;margin:1.2rem 0 .6rem;padding-bottom:.2rem;border-bottom:1px solid var(--line)}
-footer{border-top:1px solid var(--line);padding:1rem 1.2rem;color:var(--mut);font-size:.82rem;text-align:center}
+footer{border-top:1px solid var(--line);padding:1rem 1.2rem;color:var(--mut);font-size:.82rem;text-align:center} .sources a{color:var(--accent)}
 @media(max-width:900px){
  .shell{grid-template-columns:minmax(0,1fr);gap:.8rem;padding:.8rem}
  nav{position:sticky;top:2.9rem;max-height:none;background:var(--bg);border-bottom:1px solid var(--line);padding:.3rem 0;z-index:8}
  nav ul{display:flex;gap:.3rem;overflow-x:auto} nav a{white-space:nowrap}
+ .cols{column-count:1} .chart{min-height:0} .idgrid{grid-template-columns:minmax(0,1fr);gap:0} .idgrid .v{border-top:0;padding-top:0} .canvas-box,.swot-box{max-height:none}
  .lean{grid-template-columns:minmax(0,1fr);grid-template-areas:"problem" "solution" "uvp" "advantage" "segments" "metrics" "channels" "cost" "revenue"}
  .swot{grid-template-columns:minmax(0,1fr)}}
 @media print{
  nav,#lightbox{display:none} .top{position:static} .shell{display:block;max-width:none;padding:0}
- details>*{display:block!important} details{border-color:#999}
- details,section,.canvas-box,.swot-box,.stage{break-inside:avoid} body{background:#fff;color:#000;font-size:11pt}}
+ details>*{display:block!important} details{border-color:#999} .cols{column-count:1}
+ .canvas-box,.swot-box{max-height:none!important;overflow:visible!important} details,section,.canvas-box,.swot-box,.stage{break-inside:avoid} body{background:#fff;color:#000;font-size:11pt}}
 """
 
 JS = """
@@ -410,8 +507,7 @@ var box=document.getElementById('lightbox');
 function zoom(el){box.querySelector('img').src=el.querySelector('img').src;box.classList.add('on');}
 box.addEventListener('click',function(){box.classList.remove('on');});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){box.classList.remove('on');}});
-window.addEventListener('beforeprint',function(){
- document.querySelectorAll('details').forEach(function(d){d.open=true;});});
+window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
 """
 
 PAGE = """<!doctype html>
