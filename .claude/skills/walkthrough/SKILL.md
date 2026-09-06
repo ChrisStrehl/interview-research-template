@@ -67,7 +67,10 @@ finding for the teardown.
   never change account settings, passwords or payment methods.
 - Sign up only with the research inbox: `python toolbox/mailbox.py address --alias <slug>` gives
   the per-company address, and `python toolbox/mailbox.py wait --alias <slug> --timeout 180` returns
-  the verification mail with its codes and links extracted. If the script reports that the inbox is
+  the verification mail with its codes and links extracted. Some forms reject plus-addresses
+  (Freecash does); then use `python toolbox/mailbox.py address` without the alias and poll with
+  `wait --from <brand>` instead of `--alias`. Record which address the account uses in
+  `evidence/product/account.md`. If the script reports that the inbox is
   not configured, do not sign up; walk the logged-out surface and report the gate. Never use an
   address you guess and never the user's personal email.
 - Never enter payment details, never complete a purchase, never redeem, withdraw, post, message or
