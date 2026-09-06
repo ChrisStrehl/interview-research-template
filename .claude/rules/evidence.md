@@ -24,6 +24,14 @@ its source and access date.
 
 Rules that follow from the grades:
 
+- **The company's own dated statement is the primary source about its own numbers.** A founder
+  saying "we did $320M in 2025" in July 2026 is [R] and it is the best available figure. A third-party
+  profile from October 2025 saying "over €100 million" describes 2024, not a contradiction. Align the
+  dates before calling anything a contradiction; two figures at two times are a trend.
+- **Marketing screenshots are not product evidence.** A screenshot on the company's B2B site showing
+  the app is the company's account of its product, never [V] for how the product works. Product
+  claims come from the walk or stay [U].
+
 - **Aggregators are Reported, always.** theorg.com, Latka, Tracxn snippets, LinkedIn headcount, Kununu
   aggregates, Crunchbase snippets. They are frequently stale or wrong. Two aggregators that copy each
   other are still one source.
@@ -55,3 +63,11 @@ and a paraphrase is not.
 Every file states when it was researched. Data and metrics carry an "as of" date distinct from the
 file date. A changelog that stopped, a review pattern that ended, a pricing page that changed are all
 findings, so keep the dates attached to the facts.
+
+**Every problem carries three dates**: first seen, last seen, and the "still true as of" date of the
+newest dated evidence that shows it. A problem is *current* only if the last evidence is within
+thirty days of the research date; otherwise it is *history* and is labelled so. The user will raise
+current problems in a room; raising a fixed one costs the interview. Praise follows the same rule.
+
+When a problem is current, say what would show it had been fixed (a release note, a policy change,
+a drop in complaint volume) so the next run can check.

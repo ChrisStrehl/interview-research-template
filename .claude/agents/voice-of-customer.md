@@ -16,10 +16,13 @@ Read `references/source-map.md` sections 3, 3b and 4 first, and `.claude/rules/e
 ## What you own
 
 **Users** → `research/users.md` from `templates/research/users.md`. The three things people
-consistently praise and the three they consistently complain about, each with the date range in which
-it appears, the volume of evidence behind it, and two or three short verbatim quotes with links. Note
-whether a complaint pattern stopped, because that means it was fixed. Note review volume and recency
-for every source, and separate storefronts and languages where they differ.
+consistently praise and the three they consistently complain about, each with first seen, last
+seen and still true as of (the newest dated evidence), the volume of evidence behind it, and two or
+three short verbatim quotes with links. A pattern whose last evidence is older than thirty days is
+labelled history; the user must never raise a fixed problem in a room. Note review volume and
+recency for every source, and separate storefronts and languages where they differ. Look for what
+the company itself says it changed (release notes, support posts, a company account replying in a
+thread) and record it next to the complaint it addresses.
 
 **Employees and culture** → `research/culture.md` from `templates/research/culture.md`. How decisions
 get made, as far as it can be read from reviews, org shape, the job ad's own wording and founder

@@ -8,12 +8,20 @@ filled: <YYYY-MM-DD>
 
 # SWOT
 
-<!-- Three to five items per quadrant, ranked by evidence weight, each ending with [grade] file.md. Mark the item to test in the room with (ask). Headings fixed. -->
+<!-- Ranked by evidence weight, each bullet a conclusion ending in [grade][n]; problems carry dates; mark one item per quadrant with (ask). Sources: line under each quadrant. Headings fixed. See references/frameworks/swot.md. -->
 
 ## Strengths
 
+Sources:
+
 ## Weaknesses
+
+Sources:
 
 ## Opportunities
 
+Sources:
+
 ## Threats
+
+Sources:

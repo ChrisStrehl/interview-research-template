@@ -20,6 +20,9 @@ updated: <YYYY-MM-DD>
 ## In five lines
 <!-- The point of view compressed. -->
 
+## Open items
+<!-- Gaps in the workspace (flows not walked, sources not reachable), problems that are history rather than current, and what the next run should do. This is the only place the research process is described. -->
+
 ## Read in this order
 1. `point-of-view.md`
 2. `frameworks/swot.md`

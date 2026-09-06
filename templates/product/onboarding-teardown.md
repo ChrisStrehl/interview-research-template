@@ -8,7 +8,7 @@ surface: <web | android>
 
 # Onboarding and activation teardown
 
-<!-- Opinion is expected and marked [O]. Observation is [V]. Keep them on separate lines. Max 150 lines. -->
+<!-- Written only after the walk reached first value. Opinion [O] and observation [V] on separate lines. Sources under each section. Max 150 lines. See references/frameworks/onboarding-teardown.md. -->
 
 **First value, defined.** <!-- One sentence: what "activated" means for this product, from the walk. -->
 

@@ -22,7 +22,13 @@ The per-canvas guides are in `references/frameworks/`. Read the one you are fill
 
 ## Rules that apply to every canvas
 
-- **Cite by file and grade.** Every line ends with `[grade] file.md`. The reader can trace it.
+- **Conclusions, sources underneath.** A bullet states what is true and ends with `[grade][n]`;
+  the `Sources:` line under the box lists `[n] what, date, link or path`. No "according to", no
+  file names in sentences, no cross-references to other canvases.
+- **A fact appears once** across all canvases, in the box where it decides something.
+- **Problems carry dates**: first seen, last seen, still true as of. History is labelled history.
+- **No narration of the research** and no filler. An empty box is honest; "no advantage observed"
+  is not content.
 - **Do not upgrade.** A [R] in research stays [R] in the canvas.
 - **One screen.** If it does not fit, cut the weakest-evidenced items.
 - **Outside-in honesty.** Some boxes cannot be observed from outside (retention, unit economics,

@@ -13,6 +13,11 @@ re-establish the identity; if the sources you find contradict it, stop and repor
 
 Read `references/source-map.md` sections 1, 2, 5 (pricing and changelog only) and 6 before searching.
 Read `.claude/rules/evidence.md`; every claim you write carries a grade and a source with a date.
+Every figure carries the date it was stated and the period it describes: "over €100M (profile of
+Oct 2025, describes 2024)" and "$320M (founder, Jul 2026, describes 2025)" are two points on a
+curve, not a conflict. The company's own dated statements about its own numbers are the primary
+source; quote them with the timestamp. When the founder states a strategy ("we focus on the top 10
+to 30 grossing games per market"), quote it, so nobody later mistakes it for our assumption.
 
 ## What you own
 

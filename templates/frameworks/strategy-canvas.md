@@ -14,8 +14,10 @@ Scores are outside-in impressions; the shape of the lines is the finding, not th
 
 <!-- Copied from research/market.md. First column factors, then one column per company, scores 1 to 5. The renderer draws the chart from this table. -->
 
-| Factor | <Company> | <Competitor 1> | <Competitor 2> | <Competitor 3> |
-|---|---|---|---|---|
+| Factor | <Company> | <Competitor 1> | <Competitor 2> | <Competitor 3> | Evidence |
+|---|---|---|---|---|---|
+
+Sources:
 
 ## Where they compete head-on
 

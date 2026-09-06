@@ -29,8 +29,9 @@ Read `references/source-map.md` section 7 first, and `.claude/rules/evidence.md`
   analyst-speak.
 - **Factor table.** Five to eight factors buyers compare on (price, breadth, ease, support, speed,
   trust, and so on), scored 1 to 5 for this company and its three closest competitors, each score
-  with a one-word evidence pointer. This feeds the strategy canvas later. Scores are [O] unless a
-  source supports them; say so in the table.
+  with a one-word evidence pointer. Factor names are four words at most because they become chart
+  labels. This feeds the strategy canvas later. Scores are [O] unless a source supports them; say
+  so in the table.
 
 ## Method
 

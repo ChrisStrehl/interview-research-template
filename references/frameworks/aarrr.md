@@ -1,29 +1,43 @@
-# AARRR from the outside
+# AARRR: the product as a funnel
 
-Acquisition, Activation, Retention, Revenue, Referral: the product as a funnel. Useful because it
-is the vocabulary a product hiring manager already thinks in, and because it makes the limits of
-outside-in research visible in one table.
+Acquisition, Activation, Retention, Revenue, Referral. The vocabulary a product hiring manager
+already thinks in. Each stage answers one question about this product; the reader should be able to
+walk the funnel from the canvas alone.
 
-| Stage | Observable from outside | Proxy when not observable | Typical grade |
+| Stage | The question | What belongs | What does not belong |
 |---|---|---|---|
-| **Acquisition** | Store rankings and categories, SEO surface, paid ads seen, referral links, partnerships, press, the marketing site's calls to action | Review volume growth over time as a proxy for user growth | [V] for what was seen, [I] for scale |
-| **Activation** | The walk: steps to first value, what the product asks before it gives, the first "aha", what analytics events fire on the way | Store reviews mentioning the first session, "easy to start" versus "confusing" themes | [V] from the walk, [R] from reviews |
-| **Retention** | Notification and email patterns after sign-up, streaks, saved state, the reason to come back that the product builds in | Review themes about "stopped using", version history cadence, complaints about churn triggers (payout delays, bans, price rises) | [I] almost always; say so |
-| **Revenue** | Pricing page, paywall placement, what is gated, take rate or payout mechanics if a marketplace, any published GMV, ARR or payouts | Funding-to-headcount arithmetic, filed accounts where they exist | [V] for pricing, [R] for figures, [I] for economics |
-| **Referral** | In-product invite mechanics, referral rewards, share features, affiliate programme | Reviews and forum posts mentioning how they heard of it, YouTube volume | [V] for mechanics, [I] for effect |
+| **Acquisition** | How do new users find the product, and which channel carries the weight? | Store presence with installs and rating, paid channels seen (from the ad pixels and the stack), SEO content, referral share if known, the marketing claim users see first | Vendor lists (name the channel, not the pixel), company revenue |
+| **Activation** | What is first value, how many steps and inputs does it take, and where do new users drop? | First value defined in the product's own terms; steps, inputs and minutes to reach it from the walk; the one or two drop points with the reason, marked [O]; the welcome incentive if any | Anything not observed in the walk. If the walk has not reached activation, this stage stays empty and the run is not finished |
+| **Retention** | What brings a user back, and what pushes them out? | The mechanics that exist (streaks, daily bonuses, notifications, pending rewards), the exit triggers users name in reviews (bans, delays, thresholds) with first seen and still-true dates | Guesses at retention rates. If nothing can be observed, write the mechanics only |
+| **Revenue** | Where does money change hands in the product, and what does the user see of it? | For the user: thresholds, fees, payout methods, welcome bonus. For the business: the per-action mechanism in one line, dated | Valuations, competitor deals, funding, anything already in the Lean Canvas revenue box |
+| **Referral** | How does the product get users to bring users? | The mechanic and the payout, verbatim from the product; whether users mention it; any evidence of its weight | Speculation about virality |
 
-## How to fill the template
+## Rules
 
-For each stage: three to five lines. Line one is what was observed, graded. Line two is the best
-inference about how well it works and what it rests on, marked [I] with the proxy named. Line three
-is the open question a PM inside the company could answer in one sentence; that question goes to the
-point of view's hypotheses.
+- Bullets are conclusions with grades and source numbers; `Sources:` under each stage.
+- Activation gets the most space because it is the stage the user can speak to from experience.
+- Every problem named here carries first seen, last seen and still-true-as-of dates.
+- Do not repeat what the Lean Canvas already says. If a fact is in Revenue streams there, it is not
+  here; here it is the user-facing side of money.
+- The open questions section at the end holds one question per stage at most, only where the
+  evidence genuinely stops and the answer would change the read.
 
-The stage where the user will actually have something to say in an interview is Activation, because
-they walked it. Give it the most space and the most opinion, and cite the teardown.
+## Example, Activation
 
-## Do not
+Good:
 
-- Invent conversion rates. "Likely high drop-off at step 4 [I], because it asks for X before showing
-  value" is fine. "Estimated 40% drop-off" is not, unless a source gives it.
-- Present a rewards or payout mechanic as retention without evidence users come back for it.
+```
+- First value is the first credited offer; the product rewards it with a $10 welcome bonus. [V][1]
+- Sign-up is two fields, email and password; verification by email link; first offer wall visible within a minute. [V][2]
+- Likely drop: the identity check that appears before the first cash-out, not the sign-up; German reviews name it as the point where people give up. [O][R][3]
+
+Sources: [1] freecash.com/academy/de/support, 6 Sep 2026 · [2] walk, product/onboarding-teardown.md, steps 1 to 6 · [3] App Store DE reviews 2 to 5 Sep 2026, evidence/users/app-store-reviews.md
+```
+
+Bad:
+
+```
+- The walk reached signup and stopped there: email and password were entered, then a reCAPTCHA image challenge blocked account creation [V] onboarding-teardown.md.
+```
+
+That describes the research, not the product.

@@ -38,6 +38,14 @@ Rules: nothing enters a canvas that is not in a research or product file. Do not
 two files disagree and the reviewer did not resolve it, show both with their grades. A canvas fits on
 one screen; if it does not, cut the weakest-evidenced items, not the wording.
 
+Read `.claude/rules/writing.md` and the guide for each canvas in `references/frameworks/` before
+filling it; each guide says what every box is for, what does not belong, and shows a good and a bad
+example. The rules that were broken last time: bullets are conclusions with `[grade][n]` and a
+`Sources:` line under the box, never "according to" or a file name in the sentence; a fact appears
+in one box across all canvases; problems carry first seen, last seen and still-true dates; no
+narration of the research; no filler such as "no advantage observed"; a box with nothing behind it
+stays empty and is listed in `index.md` Open items instead.
+
 ## Output contract
 
 Return only this block, at most 150 words inside it:

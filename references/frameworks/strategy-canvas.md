@@ -1,26 +1,28 @@
-# Strategy canvas (Blue Ocean), from a factor table
+# Strategy canvas: positioning on one chart
 
-The strategy canvas plots how the company and its closest competitors score on the factors buyers
-compare on. It is the fastest way to show positioning on a screen, and it is where "who are you
-really competing with, and on what" gets answered.
+The strategy canvas plots the company and its closest competitors on the factors buyers compare
+on. It is the visual centrepiece of the page: the shape of the lines shows where the company
+competes head-on, where it differs, and where it may be spending on something nobody values.
 
-It depends on `research/market.md` having a factor table: five to eight factors, this company plus
-its three closest competitors, scores 1 to 5, each score with an evidence pointer. Without the table,
-do not fill the canvas; write the file with one line saying the market front has not produced the
-table, and stop.
+It needs the factor table from the market front: five to eight factors, the company plus its three
+closest competitors, scores 1 to 5, and an evidence pointer per score. Without the table, the
+canvas is not written.
 
 ## Filling it
 
-1. Copy the factor table into the template as the data block. The render script draws the line chart
-   from it.
-2. Under the table, three short paragraphs: **Where they compete head-on** (factors where scores
-   cluster), **Where they differ** (the two or three factors with the widest gap, and whether the
-   company is high or low), and **What they could stop doing** (a factor the company scores high on
-   that no review or buyer comparison mentions; that is cost without differentiation).
-3. Grades: scores are [O] unless the market front tied them to a review theme or a comparison page,
-   in which case they carry that grade. The canvas must say which.
+1. Copy the factor table exactly; the page draws the chart from it. Factor names are short and
+   plain, four words at most, because they become axis labels: "Store rating", "Scale", "Task
+   breadth", "Payout options", "Policy safety", "Momentum".
+2. Below the table, three short paragraphs, each two or three sentences:
+   - **Head-on**: the factors where scores cluster, and what that means for a buyer's choice.
+   - **Different**: the two or three factors with the widest gap, whether the company is high or
+     low, and why, with the evidence.
+   - **Could stop doing**: a factor the company scores high on that no review or buyer comparison
+     mentions; that is cost without differentiation. If none, leave the paragraph out.
+3. `Sources:` under the table, numbered per score where a score has one.
 
 ## Honesty
 
-Scores from outside are impressions. The value of the canvas is the shape of the lines, not the
-numbers. Say so in the file's first line, and never quote a score as a fact in the room.
+Scores from outside are impressions. Say in the first line that the shape is the finding, not the
+numbers, and never quote a score in a room. A score tied to a verified event (a removal, a rating)
+is [V]; the rest are [O].

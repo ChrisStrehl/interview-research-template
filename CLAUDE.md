@@ -51,6 +51,14 @@ agents themselves. The rules:
    hard (contested identity, thin sources, technical product); never downward for the reviewer.
 5. **Keep this chat lean.** No pasted reports, no long quotes, no restating what a file already says.
    Point to files by path.
+6. **Blocked means ask, not improvise.** When a specialist returns a `<blocked>` contract, post a
+   message starting with "Needs you" that says the one action and where, send a push notification,
+   and end the turn. Nothing downstream gets written until the gate is cleared. Then resume the same
+   agent with a message; it keeps its context.
+7. **Resume, don't relaunch.** An agent that ran out of turns is resumed with "continue from X".
+   Budgets are flexible by construction.
+8. **Deliverables describe the company, not the research.** The only place the process is described
+   is `index.md` Open items and the run report. See `.claude/rules/writing.md`.
 
 The full run is `/research`; parts can be re-run with `/deepen`; the page is rebuilt with `/render`.
 
