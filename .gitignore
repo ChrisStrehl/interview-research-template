@@ -12,3 +12,7 @@ __pycache__/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Company workspaces hold your transcripts and notes. The public template ignores them.
+# In your own private clone, delete the next line to commit your research.
+companies/*/
