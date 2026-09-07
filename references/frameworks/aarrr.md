@@ -12,6 +12,25 @@ walk the funnel from the canvas alone.
 | **Revenue** | Where does money change hands in the product, and what does the user see of it? | For the user: thresholds, fees, payout methods, welcome bonus. For the business: the per-action mechanism in one line, dated | Valuations, competitor deals, funding, anything already in the Lean Canvas revenue box |
 | **Referral** | How does the product get users to bring users? | The mechanic and the payout, verbatim from the product; whether users mention it; any evidence of its weight | Speculation about virality |
 
+## KPIs
+
+The section that connects the funnel to the improvement candidates in the teardown and to the
+bigger bets in the point of view. It states which metrics we assume the product is run on, so that
+every proposal can say which of them it moves. Without it, a proposal is a preference.
+
+- One north star: the number that grows when the business grows, in the product's own unit
+  (completed rewarded actions, paid seats, orders). Then one or two KPIs per stage, each with a
+  numerator, a denominator and a window. "Activation rate" is not a KPI; "share of sign-ups that
+  start a first offer within 24 hours" is.
+- Every KPI is our assumption and is graded [I], with the reasoning in the "why" column, unless
+  the company states it (a founder naming the number they steer on is [R] with the timestamp).
+- "Observable from outside" names the proxy the research can see, or says none. That column is
+  what stops the candidates from claiming effects nobody could check.
+- Name the trade-offs the product lives with, as pairs, under the table: activation against fraud
+  exposure, payout speed against chargeback risk, profiling depth against quiz completion. Each
+  candidate later has to say which side of a pair it is on.
+- Under-promise: five to eight rows, not a metrics catalogue.
+
 ## Rules
 
 - Bullets are conclusions with grades and source numbers; `Sources:` under each stage.

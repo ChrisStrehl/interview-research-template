@@ -19,21 +19,31 @@ value. A teardown of a sign-up form is not a teardown.
 5. **What it measures**: analytics events seen in the network capture, especially around sign-up
    completion and first value.
 6. **What is good**: specific and fair. A teardown that finds only faults is not credible.
-7. **Improvement candidates**: three to six, ranked by expected effect over effort, written by the
-   strategist after the review so that every one rests on graded evidence. This is the answer to
-   "what would you try or fix?" Each row carries the whole chain:
+7. **Improvement candidates**: three to six, ranked by expected effect on the north star, written
+   by the strategist after the review so that every one rests on graded evidence and on the KPIs
+   section of `frameworks/aarrr.md`. This is the answer to "what would you try or fix?", and the
+   test every row must pass is: which KPI goes up, which may go down, and why the trade is worth
+   it. A change that adds friction to onboarding is allowed only when the row shows the later KPI
+   it raises (lifetime value, first payout completion, reversal rate) and the reasoning for why
+   that gain outweighs the activation it costs. A candidate that only removes an annoyance, or only
+   adds a safeguard, without a KPI case is not listed. Each row carries the whole chain:
    - *Problem it fixes*: an observed drop from section 4 or a dated review theme, with its grade.
-   - *Reasoning*: why users are lost there and what the product currently assumes. One or two
-     sentences, the mechanism, not the symptom.
+   - *KPI it moves*: the KPI from the AARRR table by name and direction, and the KPI it may hurt.
+   - *Reasoning*: the mechanism, not the symptom: why users are lost there, what the product
+     assumes, and why the proposed change moves the named KPI. One to three sentences.
    - *Proposed change*: one concrete change to a named screen or rule, in the product's own words.
-   - *Measure*: the metric that moves if the reasoning is right, with the comparison it needs.
-   - *Rests on*: the source numbers, and a risk in the same cell when there is one: what the change
-     could break (fraud exposure, payout cost, a compliance rule).
-   Good: "Show the €25 first-withdrawal rule on the earn page before the first offer, as the app's
-   cash-out modal already does; measure the share of accounts that reach €25 within 14 days and
-   the volume of 'where is my money' support contacts. Risk: fewer sign-ups finish the quiz if the
-   threshold reads as a wall. Rests on [V][3][7]." Bad: "Improve the cash-out UX", "add
-   gamification", any change to a flow that was not walked, a redesign.
+   - *Cost and risk*: what the change costs in the KPI it may hurt, the fraud, payout or
+     compliance exposure it opens, and the measure and comparison that would show the net effect.
+   - *Rests on*: the source numbers.
+   Good: "KPI: share of accounts reaching a first successful payout within 30 days, up; quiz
+   completion, possibly down. Reasoning: the €25 rule is met on the cash-out page after the effort
+   is spent, and money the user cannot take out is the highest-volume complaint theme; stating the
+   rule where the payout method is chosen sets the expectation before the effort. Change: the
+   app's own line, 'unlock withdrawals at 25€', on the earn page above the first offer. Cost and
+   risk: some sign-ups stop at the quiz if €25 reads as a wall; measure both rates against the
+   four weeks before. Rests on [V][3][7]." Bad: "Improve the cash-out UX", "add gamification", a
+   change whose only argument is that users complained, any change to a flow that was not walked,
+   a redesign.
 8. **The first experiment**: candidate 1 sized to two weeks, one change, one metric, one reason.
    The line the user can say out loud, and the line most likely to be tested by the interviewer,
    so it rests on an observed drop, not an inferred one.

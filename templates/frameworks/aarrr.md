@@ -30,5 +30,13 @@ Sources:
 
 Sources:
 
+## KPIs
+<!-- The metrics we assume this product is run on: one north star and one or two per stage. They are our assumption, graded [I] unless the company states them, and they are what every improvement candidate and bet must move. See references/frameworks/aarrr.md, "KPIs". -->
+
+| Stage | KPI | Definition (numerator / denominator, window) | Why it is the one that matters here | Observable from outside | Grade |
+|---|---|---|---|---|---|
+
+Sources:
+
 ## Open questions for the room
 <!-- One per stage where it matters, phrased as the question you would ask. -->

@@ -30,10 +30,10 @@ written: <YYYY-MM-DD>
 
 ## Bigger bets
 
-| Bet | Why this, why now | What it would take | What would prove it wrong | Rests on |
-|---|---|---|---|---|
+| Bet | KPI it moves | Why this, why now | What it would take | What would prove it wrong | Rests on |
+|---|---|---|---|---|---|
 
-<!-- Two or three. The answer to "what would you build here?" Each rests on a current problem, a walked gap or a market fact with a source number, is larger than a two-week test, and names the evidence that would kill it. The small fixes live in product/onboarding-teardown.md under Improvement candidates; do not repeat them here. -->
+<!-- Two or three. The answer to "what would you build here?" Each names the KPI from frameworks/aarrr.md it moves, rests on a current problem, a walked gap or a market fact with a source number, is larger than a two-week test, and names the evidence that would kill it. The small fixes live in product/onboarding-teardown.md under Improvement candidates; do not repeat them here. -->
 
 
 

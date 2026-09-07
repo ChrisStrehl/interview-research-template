@@ -46,10 +46,10 @@ Sources:
 Sources:
 
 ## Improvement candidates
-<!-- Filled by the strategist after the review, not by the walker. Three to six, ranked by expected effect over effort. Each rests on an observed drop above or a dated review theme; the reasoning chain is on the page. See references/frameworks/onboarding-teardown.md section 8. -->
+<!-- Filled by the strategist after the review, not by the walker. Three to six, ranked by expected effect on the north star in frameworks/aarrr.md KPIs. Each rests on an observed drop above or a dated review theme, names the KPI it moves and the KPI it may hurt, and makes the net case; a candidate that cannot is not listed. See references/frameworks/onboarding-teardown.md section 7. -->
 
-| # | Candidate | Problem it fixes | Reasoning | Proposed change | Measure | Rests on |
-|---|---|---|---|---|---|---|
+| # | Candidate | Problem it fixes | KPI it moves | Reasoning | Proposed change | Cost and risk | Rests on |
+|---|---|---|---|---|---|---|---|
 
 Sources:
 
