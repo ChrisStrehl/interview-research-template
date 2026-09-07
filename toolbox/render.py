@@ -245,8 +245,15 @@ def inline_path(ref, dirs, in_cell=False):
     target = resolve(ref, dirs)
     if not target:
         return escape(ref)
-    if not in_cell and target.parent.name == "screens" and target.suffix.lower() == ".png":
-        return screen_link_html(target)
+    if target.parent.name == "screens" and target.suffix.lower() == ".png":
+        if not in_cell:
+            return screen_link_html(target)
+        # a thumbnail that borrows its pixels from the gallery copy at load time, so each
+        # screenshot is embedded once however often a table refers to it
+        return ('<a href="#" class="shot-ref" data-shot="%s" onclick="return zoomShot(this)">'
+                '<img class="inline-shot" data-shot="%s" alt="%s"><span>screen %s</span></a>'
+                % (escape(shot_id(target)), escape(shot_id(target)), escape(target.name),
+                   escape(screen_label(target.stem))))
     return img_html(target, "inline-shot")
 
 def postprocess(text, dirs, bid=None, srcs=None):
@@ -574,7 +581,7 @@ section{margin:0 0 2.6rem;padding-top:.6rem;border-top:1px solid var(--line)} se
 .card h4{margin:0 0 .45rem;font-size:.95rem;font-weight:600;line-height:1.35} .card dl{display:grid;grid-template-columns:minmax(6.5rem,10rem) minmax(0,1fr);gap:.22rem 1rem;margin:0} .card dt{color:var(--mut);font-size:.8rem;font-weight:600;padding-top:.1rem} .card dd{margin:0;overflow-wrap:anywhere}
 code{background:var(--shade);padding:.1em .3em;border-radius:4px;font-size:.88em;overflow-wrap:anywhere} img{max-width:100%;height:auto} blockquote{margin:.8rem 0;padding-left:.8rem;border-left:3px solid var(--line);color:var(--mut)}
 .badge{display:inline-block;min-width:1.15em;padding:0 .32em;margin:0 .12em;border-radius:4px;font-size:.72em;font-weight:700;line-height:1.5;text-align:center;color:#fff;vertical-align:.08em} .g-v{background:#15803d}.g-r{background:#b45309}.g-i{background:#1d4ed8}.g-u{background:#6b7280}.g-o{background:#7c3aed}.g-ask{background:#0f766e;padding:0 .4em}
-sup.cite{font-size:.68em;line-height:0;font-weight:600;margin-left:.05em} sup.cite a{text-decoration:none}
+sup.cite{font-size:.68em;line-height:0;font-weight:600;margin-left:.05em} sup.cite a{text-decoration:none} sup.cite+sup.cite::before{content:",";margin-right:.08em}
 details.srcs{border:0;border-top:1px solid var(--line);border-radius:0;background:none;margin:.7rem 0 0;padding:0} details.srcs summary{font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:.35rem 0}
 .sources{color:var(--mut);font-size:.76rem;line-height:1.4;padding-bottom:.3rem;overflow-wrap:anywhere} .sources p{margin:.16rem 0} .sources .n{font-weight:700;margin-right:.35rem}
 .idgrid{display:grid;grid-template-columns:minmax(8rem,14%) minmax(0,1fr);gap:0 1.1rem;margin:.4rem 0 1.4rem;max-width:96ch} .idgrid .k{font-weight:650;font-size:.82rem;color:var(--mut)} .idgrid .k,.idgrid .v{padding:.4rem 0;border-top:1px solid var(--line)} .idgrid .v{font-size:.9rem}
@@ -592,6 +599,7 @@ details.ftable{font-size:.9rem} details.ftable summary{font-weight:500;color:var
 .thumb img{display:block;width:100%;height:96px;object-fit:cover;border-radius:4px;background:var(--shade)}
 .thumb span{display:block;font-size:.72rem;margin-top:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .inline-shot{max-height:110px;border:1px solid var(--line);border-radius:4px;vertical-align:middle}
 .screen-link{font-size:.85em;white-space:nowrap;text-decoration:underline dotted}
+.shot-ref{display:inline-block;text-decoration:none;font-size:.75em;color:var(--mut);margin:.1rem .3rem .1rem 0;vertical-align:top} .shot-ref img{display:block;max-height:110px;max-width:160px;object-fit:cover;object-position:top} .shot-ref span{display:block}
 #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out} #lightbox.on{display:flex} #lightbox img{max-width:92vw;max-height:92vh}
 details{border:1px solid var(--line);border-radius:8px;background:var(--card);margin:.5rem 0;padding:.2rem .8rem} summary{cursor:pointer;font-weight:650;padding:.5rem 0} summary .date{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:.4rem}
 .sub-section{margin-bottom:2rem} .sub-section>h3{font-size:1.1rem;margin:1.2rem 0 .6rem;padding-bottom:.2rem;border-bottom:1px solid var(--line)}
@@ -616,6 +624,7 @@ function zoomShot(el){var img=document.getElementById(el.getAttribute('data-shot
 box.addEventListener('click',function(){box.classList.remove('on');});
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('sup.cite a');if(!a){return;}var t=document.getElementById(a.getAttribute('href').slice(1));var d=t&&t.closest('details');if(d){d.open=true;}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){box.classList.remove('on');}});
+document.querySelectorAll('img.inline-shot[data-shot]').forEach(function(t){var g=document.getElementById(t.getAttribute('data-shot'));if(g){t.src=g.src;}else{t.remove();}});
 window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
 """
 
