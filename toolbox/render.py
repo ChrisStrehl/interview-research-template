@@ -351,8 +351,10 @@ def aarrr(doc, dirs, root, path):
     _, sections = split_sections(body)
     cards = ['<div class="stage"><h3>%s</h3>%s</div>'
              % (key.capitalize(), to_html(pick(sections, key), dirs)) for key in AARRR_KEYS]
-    asks = to_html(pick(sections, "open question"), dirs)
-    tail = '<div class="asks"><h3>Open questions for the room</h3>%s</div>' % asks
+    kpis = pick(sections, "kpi")
+    tail = ('<div class="kpis"><h3>KPIs we assume the product is run on</h3>%s</div>' % to_html(kpis, dirs)
+            if kpis.strip() else "")
+    tail += '<div class="asks"><h3>Open questions for the room</h3>%s</div>' % to_html(pick(sections, "open question"), dirs)
     return subtitle(meta) + '<div class="stages">%s</div>%s' % ("".join(cards), tail)
 
 def parse_factor_table(md_text):
@@ -591,7 +593,7 @@ details.srcs{border:0;border-top:1px solid var(--line);border-radius:0;backgroun
 .canvas-box h3,.swot-box h3,.stage h3{margin:0 0 .3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
 .canvas-box ul,.swot-box ul,.stage ul{padding-left:1.1rem;margin:.25rem 0} .canvas-box li,.swot-box li{margin:.18rem 0} .canvas-box p,.swot-box p,.stage p{margin:.3rem 0}
 .swot{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))} .s-strengths{border-top:3px solid #15803d}.s-weaknesses{border-top:3px solid #b91c1c}.s-opportunities{border-top:3px solid #1d4ed8}.s-threats{border-top:3px solid #b45309}
-.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 300px} .asks{margin-top:.8rem} .strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
+.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 300px} .asks{margin-top:.8rem} .kpis{margin-top:1rem} .kpis h3{font-size:.95rem;margin:0 0 .2rem} .strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
 .chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem .4rem;margin:.8rem 0 1rem} .chart{width:100%;height:auto;min-height:560px;display:block} .chart .grid{stroke:var(--line)}
 .chart .ax{fill:var(--mut);font-size:14px;font-family:inherit} .chart .fx{fill:var(--fg);font-size:13px} .chart .lg{font-size:15px;fill:var(--fg)} .chart .pt{cursor:pointer} .chart .pt:hover{r:9}
 details.ftable{font-size:.9rem} details.ftable summary{font-weight:500;color:var(--mut)}
