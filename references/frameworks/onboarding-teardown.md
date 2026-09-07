@@ -19,9 +19,24 @@ value. A teardown of a sign-up form is not a teardown.
 5. **What it measures**: analytics events seen in the network capture, especially around sign-up
    completion and first value.
 6. **What is good**: specific and fair. A teardown that finds only faults is not credible.
-7. **The first experiment**: one change, one metric, one reason, sized to two weeks. The line the
-   user can say out loud, and the line most likely to be tested by the interviewer, so it rests on
-   an observed drop, not an inferred one.
+7. **Improvement candidates**: three to six, ranked by expected effect over effort, written by the
+   strategist after the review so that every one rests on graded evidence. This is the answer to
+   "what would you try or fix?" Each row carries the whole chain:
+   - *Problem it fixes*: an observed drop from section 4 or a dated review theme, with its grade.
+   - *Reasoning*: why users are lost there and what the product currently assumes. One or two
+     sentences, the mechanism, not the symptom.
+   - *Proposed change*: one concrete change to a named screen or rule, in the product's own words.
+   - *Measure*: the metric that moves if the reasoning is right, with the comparison it needs.
+   - *Rests on*: the source numbers, and a risk in the same cell when there is one: what the change
+     could break (fraud exposure, payout cost, a compliance rule).
+   Good: "Show the €25 first-withdrawal rule on the earn page before the first offer, as the app's
+   cash-out modal already does; measure the share of accounts that reach €25 within 14 days and
+   the volume of 'where is my money' support contacts. Risk: fewer sign-ups finish the quiz if the
+   threshold reads as a wall. Rests on [V][3][7]." Bad: "Improve the cash-out UX", "add
+   gamification", any change to a flow that was not walked, a redesign.
+8. **The first experiment**: candidate 1 sized to two weeks, one change, one metric, one reason.
+   The line the user can say out loud, and the line most likely to be tested by the interviewer,
+   so it rests on an observed drop, not an inferred one.
 
 ## Rules
 

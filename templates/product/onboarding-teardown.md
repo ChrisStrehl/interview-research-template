@@ -45,7 +45,15 @@ Sources:
 
 Sources:
 
+## Improvement candidates
+<!-- Filled by the strategist after the review, not by the walker. Three to six, ranked by expected effect over effort. Each rests on an observed drop above or a dated review theme; the reasoning chain is on the page. See references/frameworks/onboarding-teardown.md section 8. -->
+
+| # | Candidate | Problem it fixes | Reasoning | Proposed change | Measure | Rests on |
+|---|---|---|---|---|---|---|
+
+Sources:
+
 ## The first experiment
-<!-- One change, one metric, one reason, sized to a two-week test. The line to say out loud. -->
+<!-- Candidate 1 sized to a two-week test: one change, one metric, one reason. The line to say out loud. -->
 
 Sources:

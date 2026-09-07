@@ -90,15 +90,19 @@ adds dates to problems, corrects grades in place, curates `claims-register.md` a
 ## 5. Frameworks
 
 Spawn `strategist` on the slug. It fills `frameworks/` from the reviewed files under the writing
-rules and the per-canvas guides. Read its contract.
+rules and the per-canvas guides, and adds the ranked improvement candidates to
+`product/onboarding-teardown.md`: the small, evidenced fixes that answer "what would you try?"
+Read its contract.
 
 ## 6. The point of view
 
 Yours; do not delegate it. Read `research/*.md` and `product/*.md` in full, once. Write
 `point-of-view.md` from the template under `.claude/rules/writing.md`: conclusions with grades and
-source numbers, a sources list at the end, the broken-problems table with dates, and a questions
-table where every question shows what it rests on, why this interviewer can answer it, and that the
-inputs do not already answer it. Facts stated as facts are [V] in the register.
+source numbers, a sources list at the end, the broken-problems table with dates, two or three
+bigger bets (the answer to "what would you build here?", each resting on a current problem or a
+market fact and naming what would prove it wrong; the small fixes stay in the teardown), and a
+questions table where every question shows what it rests on, why this interviewer can answer it,
+and that the inputs do not already answer it. Facts stated as facts are [V] in the register.
 
 Then `index.md`: identity, five lines, **Open items** (gaps, history problems, what the next run
 should do; this is the only place the research process is described), reading order, one line per

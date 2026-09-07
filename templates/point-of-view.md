@@ -28,6 +28,15 @@ written: <YYYY-MM-DD>
 ## Where I would focus first
 <!-- One or two things, the reason, what you would measure. Under-promise. -->
 
+## Bigger bets
+
+| Bet | Why this, why now | What it would take | What would prove it wrong | Rests on |
+|---|---|---|---|---|
+
+<!-- Two or three. The answer to "what would you build here?" Each rests on a current problem, a walked gap or a market fact with a source number, is larger than a two-week test, and names the evidence that would kill it. The small fixes live in product/onboarding-teardown.md under Improvement candidates; do not repeat them here. -->
+
+
+
 ## Questions for the room
 
 | Question | Rests on | Why they can answer it | Checked against inputs |

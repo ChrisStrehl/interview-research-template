@@ -18,7 +18,7 @@ The per-canvas guides are in `references/frameworks/`. Read the one you are fill
 | AARRR funnel | `references/frameworks/aarrr.md` | `templates/frameworks/aarrr.md` | product walk, users, business, market |
 | SWOT | `references/frameworks/swot.md` | `templates/frameworks/swot.md` | all research, product, market |
 | Strategy canvas | `references/frameworks/strategy-canvas.md` | `templates/frameworks/strategy-canvas.md` | market factor table |
-| Onboarding teardown | `references/frameworks/onboarding-teardown.md` | `templates/product/onboarding-teardown.md` | the walk itself |
+| Onboarding teardown | `references/frameworks/onboarding-teardown.md` | `templates/product/onboarding-teardown.md` | the walk itself; the Improvement candidates section is added after review from the drops and the review themes |
 
 ## Rules that apply to every canvas
 

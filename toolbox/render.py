@@ -40,10 +40,16 @@ ASK_RE = re.compile(r"\(ask\)")
 MARKER_RE = re.compile(r"\[(\d{1,3})\]")
 SOURCE_RE = re.compile(r"^\s*(?:[-*]\s+)?(?:\*\*|__|\*|_)?\s*sources?\s*:(?:\*\*|__|\*|_)?\s*(.*)$", re.I)
 BARE_URL_RE = re.compile(r'(?<![(<"\w])https?://[^\s<>)"\]]+')
-IMG_PATH_RE = re.compile(r"(?<![\w/\-.])((?:[\w.\-]+/)+[\w.\-]+\.(?:png|jpe?g|gif|webp))")
+IMG_PATH_RE = re.compile(r"(?<![\w/\-.])((?:[\w.\-]+/)*[\w.\-]+\.(?:png|jpe?g|gif|webp))")
 SRC_RE = re.compile(r'src="([^"]+)"')
 TAGNAME_RE = re.compile(r"^</?([a-zA-Z][\w-]*)")
 LEAD_NUM_RE = re.compile(r"^(\d+)")
+TABLE_RE = re.compile(r"<table>.*?</table>", re.S)
+ROW_RE = re.compile(r"<tr>(.*?)</tr>", re.S)
+CELL_RE = re.compile(r"<t[hd][^>]*>(.*?)</t[hd]>", re.S)
+STRIP_TAGS_RE = re.compile(r"<[^>]+>")
+CARD_COLS = 6            # a table with this many columns or more is rendered as cards
+CARD_CELL_CHARS = 160    # ...or one whose longest cell is longer than this
 GRADES = {"V": ("Verified", "g-v"), "R": ("Reported", "g-r"), "I": ("Inferred", "g-i"),
           "U": ("Unknown", "g-u"), "O": ("Opinion", "g-o")}
 DATE_KEYS = ("researched", "filled", "walked", "written", "curated", "updated")
@@ -197,10 +203,41 @@ def screen_link_html(path):
 def badge(letter):
     return '<span class="badge %s" title="%s">%s</span>' % (GRADES[letter][1], GRADES[letter][0], letter)
 
-def cite(num, bid, nums):
-    """A [1] marker: a superscript link into this box's footer, or a plain superscript."""
-    return ('<sup class="cite"><a href="#src-%s-%s">%s</a></sup>' % (bid, num, num)
-            if bid and num in nums else '<sup class="cite">%s</sup>' % num)
+def cite(num, bid, srcs):
+    """A [1] marker: a superscript link into this box's footer that shows the source on hover,
+    or a plain superscript when the box has no footer entry for it."""
+    text = srcs.get(num) if srcs else None
+    if bid and text is not None:
+        return ('<sup class="cite"><a href="#src-%s-%s" title="%s">%s</a></sup>'
+                % (bid, num, escape(STRIP_TAGS_RE.sub("", text)), num))
+    return '<sup class="cite">%s</sup>' % num
+
+def table_rows(table_html):
+    return [CELL_RE.findall(row) for row in ROW_RE.findall(table_html)]
+
+def wants_cards(rows):
+    """Wide or wordy tables read better as one card per row than as a table that scrolls sideways."""
+    if len(rows) < 2:
+        return False
+    longest = max((len(STRIP_TAGS_RE.sub("", c)) for r in rows[1:] for c in r), default=0)
+    return len(rows[0]) >= CARD_COLS or longest > CARD_CELL_CHARS
+
+def card_html(head, row):
+    cells = row + [""] * (len(head) - len(row))
+    title, rest = cells[0].strip(), list(zip(head[1:], cells[1:]))
+    if re.fullmatch(r"\d+", title) and rest:
+        title, rest = "%s &middot; %s" % (title, rest[0][1]), rest[1:]
+    body = "".join("<dt>%s</dt><dd>%s</dd>" % (k, v) for k, v in rest if v.strip())
+    return '<div class="card"><h4>%s</h4><dl>%s</dl></div>' % (title, body)
+
+def tables_html(html, cards=True):
+    """Wrap every table for horizontal scrolling, or turn the wide ones into cards."""
+    def repl(m):
+        rows = table_rows(m.group(0))
+        if cards and wants_cards(rows):
+            return '<div class="cards">%s</div>' % "".join(card_html(rows[0], r) for r in rows[1:])
+        return '<div class="table-wrap">%s</div>' % m.group(0)
+    return TABLE_RE.sub(repl, html)
 
 def inline_path(ref, dirs, in_cell=False):
     """A bare screenshot path found in running text: a gallery screen-link outside tables, an
@@ -212,7 +249,7 @@ def inline_path(ref, dirs, in_cell=False):
         return screen_link_html(target)
     return img_html(target, "inline-shot")
 
-def postprocess(text, dirs, bid=None, nums=frozenset()):
+def postprocess(text, dirs, bid=None, srcs=None):
     """Badge grades, link citations, inline images; skip anything inside a tag or code."""
     out, depth, cell = [], 0, 0
     for part in TAG_RE.split(text):
@@ -228,13 +265,13 @@ def postprocess(text, dirs, bid=None, nums=frozenset()):
                 depth += 1
             elif low.startswith(("</pre", "</code")):
                 depth = max(0, depth - 1)
-            if name in ("td", "th"):
+            if name in ("td", "th", "dd"):
                 cell = cell + 1 if not part.startswith("</") else max(0, cell - 1)
             out.append(part)
             continue
         if depth == 0:
             part = GRADE_RE.sub(lambda m: badge(m.group(1)), part)
-            part = MARKER_RE.sub(lambda m: cite(m.group(1), bid, nums), part)
+            part = MARKER_RE.sub(lambda m: cite(m.group(1), bid, srcs), part)
             part = ASK_RE.sub('<span class="badge g-ask" title="Ask this in the room">ask</span>', part)
             part = IMG_PATH_RE.sub(lambda m: inline_path(m.group(1), dirs, cell > 0), part)
         out.append(part)
@@ -252,18 +289,19 @@ def sources_html(entries, bid, dirs):
     rows = ['<p%s>%s%s</p>' % (' id="src-%s-%s"' % (bid, num) if num else "",
                                '<span class="n">%s</span>' % escape(num) if num else "",
                                inline_md(text, dirs)) for num, text in entries]
-    return '<div class="sources"><span class="slab">Sources</span>%s</div>' % "".join(rows)
+    return ('<details class="srcs"><summary>Sources (%d)</summary><div class="sources">%s</div></details>'
+            % (len(rows), "".join(rows)))
 
-def to_html(md_text, dirs):
-    """Markdown to HTML, with any 'Sources:' block moved to a footer and citations linked."""
+def to_html(md_text, dirs, cards=True):
+    """Markdown to HTML, with any 'Sources:' block moved to a collapsed footer, citations linked
+    and shown on hover, and wide tables turned into cards unless `cards` is False."""
     if not md_text.strip():
         return '<p class="note">Nothing under this heading yet.</p>'
     body, entries = split_sources(md_text)
     cited = bool(entries) or bool(MARKER_RE.search(body))
     BOX[0], bid = BOX[0] + cited, ("b%d" % (BOX[0] + 1) if cited else None)
     MD.reset()
-    out = MD.convert(body).replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
-    out = postprocess(out, dirs, bid, frozenset(n for n, _ in entries))
+    out = postprocess(tables_html(MD.convert(body), cards), dirs, bid, dict(entries))
     return out + (sources_html(entries, bid, dirs) if entries else "")
 
 def section(sid, title, inner, cls=""):
@@ -397,7 +435,7 @@ def strategy_canvas(doc, dirs, root, path):
     if factors and companies:
         chart = ('<div class="chart-wrap">%s</div>' % chart_svg(factors, companies, scores, evidence)
                  + '<details class="ftable"><summary>Factor table and evidence</summary>%s</details>'
-                 % to_html(table_md, dirs))
+                 % to_html(table_md, dirs, cards=False))
     else:
         chart = ('<p class="note">No numeric factor table found; the file is shown as written.</p>'
                  + to_html(table_md, dirs))
@@ -525,25 +563,28 @@ CSS = """
 body{margin:0;background:var(--bg);color:var(--fg);overflow-x:hidden;font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 h1,h2,h3,h4{line-height:1.25;font-weight:650} h1{font-size:1.6rem;margin:0} h2{font-size:1.35rem;margin:0 0 .4rem} h3{font-size:1.02rem;margin:1.4rem 0 .4rem} a{color:var(--accent)}
 .top{position:sticky;top:0;z-index:9;background:var(--card);border-bottom:1px solid var(--line);padding:.7rem 1.2rem;display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap} .top .sub{margin:0}
-.shell{display:grid;grid-template-columns:216px minmax(0,1fr);gap:2rem;max-width:1240px;margin:0 auto;padding:1.2rem} main{min-width:0} nav ul{list-style:none;margin:0;padding:0}
+.shell{display:grid;grid-template-columns:200px minmax(0,1fr);gap:2rem;max-width:1480px;margin:0 auto;padding:1.2rem} main{min-width:0} nav ul{list-style:none;margin:0;padding:0}
 nav{position:sticky;top:3.4rem;align-self:start;max-height:calc(100vh - 4rem);overflow:auto} nav a{display:block;padding:.24rem .5rem;border-radius:5px;text-decoration:none;color:var(--mut);font-size:.88rem} nav a:hover{background:var(--shade);color:var(--fg)}
-section{margin:0 0 2.6rem;padding-top:.6rem;border-top:1px solid var(--line)} section:first-of-type{border-top:0} .prose{max-width:70ch}
-.feature .prose{max-width:74ch;font-size:1.06rem} .feature h3{margin-top:1.6rem;color:var(--accent)} .cols{max-width:none;column-count:2;column-gap:2.4rem} .cols h3{margin-top:0;break-after:avoid} .cols>*{break-inside:avoid}
+section{margin:0 0 2.6rem;padding-top:.6rem;border-top:1px solid var(--line)} section:first-of-type{border-top:0}
+.prose>p,.prose>ul,.prose>ol,.prose>blockquote,.prose>h3,.prose>h4{max-width:74ch} .prose>ul,.prose>ol{padding-left:1.4rem}
+.feature .prose{font-size:1.06rem} .feature .prose>p,.feature .prose>ul,.feature .prose>ol{max-width:78ch} .feature h3{margin-top:1.6rem;color:var(--accent)} .cols{max-width:none;column-count:2;column-gap:2.4rem} .cols h3{margin-top:0;break-after:avoid} .cols>*{break-inside:avoid}
 .sub{margin:.1rem 0 1rem;color:var(--mut);font-size:.8rem} .note{color:var(--mut);font-size:.86rem;font-style:italic} .missing{border-left:3px solid var(--line);padding-left:.6rem}
-.table-wrap{overflow-x:auto;max-width:100%;margin:.8rem 0;border:1px solid var(--line);border-radius:8px} table{border-collapse:collapse;font-size:.88rem;min-width:100%} th,td{border-bottom:1px solid var(--line);padding:.4rem .6rem;text-align:left;vertical-align:top} th{background:var(--shade);white-space:nowrap}
-code{background:var(--shade);padding:.1em .3em;border-radius:4px;font-size:.88em} img{max-width:100%;height:auto} blockquote{margin:.8rem 0;padding-left:.8rem;border-left:3px solid var(--line);color:var(--mut)}
+.table-wrap{overflow-x:auto;max-width:100%;margin:.8rem 0;border:1px solid var(--line);border-radius:8px} table{border-collapse:collapse;font-size:.88rem;min-width:100%} th,td{border-bottom:1px solid var(--line);padding:.4rem .6rem;text-align:left;vertical-align:top;overflow-wrap:anywhere} th{background:var(--shade);white-space:nowrap}
+.cards{display:grid;gap:.6rem;margin:.8rem 0;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))} .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.65rem .85rem;font-size:.9rem;min-width:0}
+.card h4{margin:0 0 .45rem;font-size:.95rem;font-weight:600;line-height:1.35} .card dl{display:grid;grid-template-columns:minmax(6.5rem,10rem) minmax(0,1fr);gap:.22rem 1rem;margin:0} .card dt{color:var(--mut);font-size:.8rem;font-weight:600;padding-top:.1rem} .card dd{margin:0;overflow-wrap:anywhere}
+code{background:var(--shade);padding:.1em .3em;border-radius:4px;font-size:.88em;overflow-wrap:anywhere} img{max-width:100%;height:auto} blockquote{margin:.8rem 0;padding-left:.8rem;border-left:3px solid var(--line);color:var(--mut)}
 .badge{display:inline-block;min-width:1.15em;padding:0 .32em;margin:0 .12em;border-radius:4px;font-size:.72em;font-weight:700;line-height:1.5;text-align:center;color:#fff;vertical-align:.08em} .g-v{background:#15803d}.g-r{background:#b45309}.g-i{background:#1d4ed8}.g-u{background:#6b7280}.g-o{background:#7c3aed}.g-ask{background:#0f766e;padding:0 .4em}
 sup.cite{font-size:.68em;line-height:0;font-weight:600;margin-left:.05em} sup.cite a{text-decoration:none}
-.sources{margin-top:.7rem;padding-top:.45rem;border-top:1px solid var(--line);color:var(--mut);font-size:.76rem;line-height:1.4} .sources p{margin:.16rem 0} .sources .n{font-weight:700;margin-right:.35rem} .sources a{word-break:break-word}
-.sources .slab{display:block;text-transform:uppercase;letter-spacing:.06em;font-size:.66rem;margin-bottom:.25rem}
+details.srcs{border:0;border-top:1px solid var(--line);border-radius:0;background:none;margin:.7rem 0 0;padding:0} details.srcs summary{font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:.35rem 0}
+.sources{color:var(--mut);font-size:.76rem;line-height:1.4;padding-bottom:.3rem;overflow-wrap:anywhere} .sources p{margin:.16rem 0} .sources .n{font-weight:700;margin-right:.35rem}
 .idgrid{display:grid;grid-template-columns:minmax(8rem,14%) minmax(0,1fr);gap:0 1.1rem;margin:.4rem 0 1.4rem;max-width:96ch} .idgrid .k{font-weight:650;font-size:.82rem;color:var(--mut)} .idgrid .k,.idgrid .v{padding:.4rem 0;border-top:1px solid var(--line)} .idgrid .v{font-size:.9rem}
-.lean{display:grid;gap:.6rem;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-areas:"problem solution uvp advantage segments" "problem metrics uvp channels segments" "cost cost cost revenue revenue"}
+.lean{display:grid;gap:.6rem;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"problem solution uvp" "problem metrics uvp" "advantage channels segments" "cost cost revenue"}
 .a-problem{grid-area:problem}.a-solution{grid-area:solution}.a-uvp{grid-area:uvp}.a-advantage{grid-area:advantage}.a-segments{grid-area:segments}.a-metrics{grid-area:metrics}.a-channels{grid-area:channels}.a-cost{grid-area:cost}.a-revenue{grid-area:revenue}
-.canvas-box,.swot-box,.stage,.asks{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;font-size:.86rem} .canvas-box,.swot-box{line-height:1.38;max-height:60vh;overflow-y:auto}
+.canvas-box,.swot-box,.stage,.asks{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;font-size:.86rem;min-width:0;overflow-wrap:anywhere} .canvas-box,.swot-box{line-height:1.38}
 .canvas-box h3,.swot-box h3,.stage h3{margin:0 0 .3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
 .canvas-box ul,.swot-box ul,.stage ul{padding-left:1.1rem;margin:.25rem 0} .canvas-box li,.swot-box li{margin:.18rem 0} .canvas-box p,.swot-box p,.stage p{margin:.3rem 0}
 .swot{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))} .s-strengths{border-top:3px solid #15803d}.s-weaknesses{border-top:3px solid #b91c1c}.s-opportunities{border-top:3px solid #1d4ed8}.s-threats{border-top:3px solid #b45309}
-.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 175px} .asks{margin-top:.8rem} .strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
+.stages{display:flex;gap:.6rem;flex-wrap:wrap} .stages .stage{flex:1 1 300px} .asks{margin-top:.8rem} .strip{display:flex;gap:.6rem;overflow-x:auto;padding:.4rem 0}
 .chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem .4rem;margin:.8rem 0 1rem} .chart{width:100%;height:auto;min-height:560px;display:block} .chart .grid{stroke:var(--line)}
 .chart .ax{fill:var(--mut);font-size:14px;font-family:inherit} .chart .fx{fill:var(--fg);font-size:13px} .chart .lg{font-size:15px;fill:var(--fg)} .chart .pt{cursor:pointer} .chart .pt:hover{r:9}
 details.ftable{font-size:.9rem} details.ftable summary{font-weight:500;color:var(--mut)}
@@ -559,13 +600,13 @@ footer{border-top:1px solid var(--line);padding:1rem 1.2rem;color:var(--mut);fon
  .shell{grid-template-columns:minmax(0,1fr);gap:.8rem;padding:.8rem}
  nav{position:sticky;top:2.9rem;max-height:none;background:var(--bg);border-bottom:1px solid var(--line);padding:.3rem 0;z-index:8}
  nav ul{display:flex;gap:.3rem;overflow-x:auto} nav a{white-space:nowrap}
- .cols{column-count:1} .chart{min-height:0} .idgrid{grid-template-columns:minmax(0,1fr);gap:0} .idgrid .v{border-top:0;padding-top:0} .canvas-box,.swot-box{max-height:none}
+ .cols{column-count:1} .chart{min-height:0} .idgrid{grid-template-columns:minmax(0,1fr);gap:0} .idgrid .v{border-top:0;padding-top:0} .card dl{grid-template-columns:minmax(0,1fr)} .card dt{padding-top:.3rem}
  .lean{grid-template-columns:minmax(0,1fr);grid-template-areas:"problem" "solution" "uvp" "advantage" "segments" "metrics" "channels" "cost" "revenue"}
  .swot{grid-template-columns:minmax(0,1fr)}}
 @media print{
  nav,#lightbox{display:none} .top{position:static} .shell{display:block;max-width:none;padding:0}
  details>*{display:block!important} details{border-color:#999} .cols{column-count:1}
- .canvas-box,.swot-box{max-height:none!important;overflow:visible!important} details,section,.canvas-box,.swot-box,.stage{break-inside:avoid} body{background:#fff;color:#000;font-size:11pt}}
+ details.srcs summary{display:none} details,section,.canvas-box,.swot-box,.stage,.card{break-inside:avoid} body{background:#fff;color:#000;font-size:11pt}}
 """
 
 JS = """
@@ -573,6 +614,7 @@ var box=document.getElementById('lightbox');
 function zoom(el){box.querySelector('img').src=el.querySelector('img').src;box.classList.add('on');}
 function zoomShot(el){var img=document.getElementById(el.getAttribute('data-shot'));if(img){box.querySelector('img').src=img.src;box.classList.add('on');}return false;}
 box.addEventListener('click',function(){box.classList.remove('on');});
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('sup.cite a');if(!a){return;}var t=document.getElementById(a.getAttribute('href').slice(1));var d=t&&t.closest('details');if(d){d.open=true;}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){box.classList.remove('on');}});
 window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
 """
