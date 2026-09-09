@@ -21,13 +21,16 @@ This repo does the hours. You do the conversation.
 
 After one command, `companies/<slug>/` holds:
 
-- **A point of view.** About 500 words: what the company is, how it is doing, what is working, what is
-  broken, where you would focus, and the hypotheses to test in the room.
-- **Canvases.** Lean Canvas, AARRR funnel, SWOT, and a strategy canvas when the market front produced
-  a factor table. One screen each, every line traceable to a research file and a grade.
-- **A product walk.** A product map with one screenshot per screen, a stack section from what the
-  browser actually loaded, and an onboarding and activation teardown with the first experiment you
-  would run.
+- **A point of view.** About 600 words: what the company is, how it is doing, what is working, what is
+  broken with dates, where you would focus, two or three bigger bets with the KPI each one moves and
+  what would prove it wrong, and the questions to ask in the room.
+- **Canvases.** Lean Canvas, AARRR funnel with the KPIs the product is assumed to run on, SWOT, and a
+  strategy canvas when the market front produced a factor table. One screen each, every line ending
+  in a grade and a source number.
+- **A product walk.** A product map with one screenshot per screen on web and Android, a stack section
+  from what the browser actually loaded, and an onboarding and activation teardown with ranked
+  improvement candidates, each naming the KPI it moves, the KPI it may hurt and the net case, and
+  the first experiment you would run.
 - **Seven research fronts.** Business, money, people, users, culture, market and product, each with
   fixed headings, sources and dates.
 - **A claims register.** The fifteen or so claims your point of view leans on, each graded, with what
