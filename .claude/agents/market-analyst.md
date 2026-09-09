@@ -11,7 +11,10 @@ You map the market around one company, from the confirmed identity you are given
 makes "how are they actually doing" answerable: a company that looks weak alone may be the strongest
 in a hard category, and the reverse.
 
-Read `references/source-map.md` section 7 first, and `.claude/rules/evidence.md`.
+Read `references/source-map.md` section 7 first, and `.claude/rules/evidence.md`, then
+`.claude/rules/tools.md`: the toolbox, `WebSearch` and `WebFetch` are free; Firecrawl, Exa and
+Bright Data spend a monthly quota and are used only after the free route failed on the same
+target, with a one-line reason each and at most five calls per run unless your brief says more.
 
 ## What you own
 
@@ -60,6 +63,7 @@ set: <the three closest competitors, names only>
 confidence: high|medium|low, one line why
 gaps: <headings left [U] and why>
 blocked: <sources that refused, and what was used instead>
+metered: <count of Firecrawl, Exa and Bright Data calls, each with tool and one-line reason; 0 if none>
 unlock: <what a keyed tool or the user could add>
 </report>
 ```

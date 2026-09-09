@@ -11,7 +11,10 @@ You collect sentiment for one company, from the confirmed identity you are given
 words of users and employees, not ratings. A star score is not a finding; a recurring complaint with
 dates and three verbatim quotes is.
 
-Read `references/source-map.md` sections 3, 3b and 4 first, and `.claude/rules/evidence.md`.
+Read `references/source-map.md` sections 3, 3b and 4 first, and `.claude/rules/evidence.md`, then
+`.claude/rules/tools.md`: the toolbox, `WebSearch` and `WebFetch` are free; Firecrawl, Exa and
+Bright Data spend a monthly quota and are used only after the free route failed on the same
+target, with a one-line reason each and at most five calls per run unless your brief says more.
 
 ## What you own
 
@@ -70,6 +73,7 @@ volume: <sources with counts and date ranges, one line>
 confidence: high|medium|low, one line why
 gaps: <headings left [U] and why>
 blocked: <sources that refused, and what was used instead>
+metered: <count of Firecrawl, Exa and Bright Data calls, each with tool and one-line reason; 0 if none>
 unlock: <what a keyed unblocker or the user could add>
 </report>
 ```

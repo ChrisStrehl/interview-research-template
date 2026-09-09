@@ -46,7 +46,7 @@ No install, no key, no signup. Use these first, always.
 | **`WebFetch`** (built-in) | Fetches a page, renders it to markdown, answers a prompt against it. Blocked on `www.reddit.com`, `old.reddit.com`, `www.kununu.com` (refused); 403s on `glassdoor.com`. Works on essentially everything else — company sites, docs, registries, press |
 | **chrome-devtools MCP** (plugin, installed) | Walks a real web product: screenshots, an accessibility-tree snapshot with stable element IDs, and — its standout feature — full network request/response capture, which is the fastest free way to infer a tech stack. Also Lighthouse audits. Launches its own non-headless Chrome with a persistent profile, so a login survives across sessions |
 | **playwright MCP** (plugin, installed) | A second browser automation path; stronger auto-waiting on heavy SPAs. Its `--extension` mode attaches to tabs in your *actual*, already-logged-in browser — the clean route through SSO/2FA that chrome-devtools MCP cannot do since Chrome 136 blocks debugging the default profile |
-| **exa MCP** (plugin, installed, hosted keyless mode) | Semantic/neural search at `https://mcp.exa.ai/mcp` — finds forum threads, discussions and lookalike companies that keyword search misses. Anonymous hosted use is keyless and rate-limited; set `EXA_API_KEY` for your own key and higher limits |
+| **exa MCP** (plugin, installed, hosted keyless mode) | Semantic/neural search at `https://mcp.exa.ai/mcp` — finds forum threads, discussions and lookalike companies that keyword search misses. Anonymous hosted use is keyless and rate-limited; set `EXA_API_KEY` for your own key and higher limits. Treat it as metered: `WebSearch` first, Exa only when keyword search found nothing on a query that matters (`.claude/rules/tools.md`) |
 | **`toolbox/` scripts** | Keyless local scripts run via Bash from the repo root: `hn.py` (Hacker News via Algolia — free, verified working), `reddit.py` (Arctic Shift — the only confirmed free Reddit path), `wayback.py` (Wayback Machine CDX + availability API), `appstore.py` (iTunes lookup + Apple RSS reviews), `playstore.mjs` (Google Play listing/reviews), `youtube.py` (transcripts and comments), `stack.py` (scripted tech-stack read). Prefer these over installing a matching MCP server — they are cheaper in tokens and have no install risk |
 
 Why stop here rather than installing more: a dedicated MCP server exists for several of the above
@@ -58,6 +58,11 @@ schemas sitting in every prompt for the life of the session.
 ---
 
 ## 2. Optional upgrades
+
+**Both of these, and Exa above, are metered.** Every call spends credits from a monthly quota, and
+a run has exhausted the Firecrawl quota before. The rules in `.claude/rules/tools.md` apply to every
+agent: free tools first on the same target, a one-line reason per metered call, at most five per
+agent run unless the brief says otherwise, `crawl`/`agent`/`extract` never without being asked.
 
 Install only when the built-ins hit a real wall — a blocked page you actually need full text from, or
 an Android app you need to click through. Each needs a key from outside this repo (see §4).

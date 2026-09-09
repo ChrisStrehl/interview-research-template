@@ -59,6 +59,11 @@ agents themselves. The rules:
    Budgets are flexible by construction.
 8. **Deliverables describe the company, not the research.** The only place the process is described
    is `index.md` Open items and the run report. See `.claude/rules/writing.md`.
+9. **Metered tools are a last resort.** Firecrawl, Exa and Bright Data spend credits from a monthly
+   quota that has run out mid-run before. The toolbox scripts, `WebSearch` and `WebFetch` come
+   first, always; a metered call needs a failed free attempt on the same target and a one-line
+   reason, and every brief you send a gatherer states its metered budget (default five, usually
+   zero used). See `.claude/rules/tools.md`.
 
 The full run is `/research`; parts can be re-run with `/deepen`; the page is rebuilt with `/render`.
 

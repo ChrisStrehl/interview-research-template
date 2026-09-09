@@ -54,8 +54,9 @@ for the answer.
 
 ## 3. Gather, and the walk
 
-Launch in the same turn, each with the identity block, the slug, the role, the account plan and the
-path to `inputs/brief.md`:
+Launch in the same turn, each with the identity block, the slug, the role, the account plan, the
+path to `inputs/brief.md` and its metered budget (`.claude/rules/tools.md`: default five Firecrawl,
+Exa or Bright Data calls, raise it only for a named blocked source the run needs):
 
 | Agent | Fronts | Default model |
 |---|---|---|

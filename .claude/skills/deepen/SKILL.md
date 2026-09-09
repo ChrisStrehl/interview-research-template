@@ -18,7 +18,8 @@ menu in one short message if the user did not say:
    then decide which fronts the new facts touch. A hiring-manager transcript usually touches people,
    culture and the point of view; a pricing change touches business and the Lean Canvas.
 2. **Re-run a front.** Spawn the matching agent with the identity block and a narrower brief that
-   names what was thin last time (from `evidence/review-log.md`). Then spawn `reviewer` on the
+   names what was thin last time (from `evidence/review-log.md`) and its metered budget
+   (`.claude/rules/tools.md`; raise the default five only for a named blocked source). Then spawn `reviewer` on the
    changed files only, and `strategist` to refresh the canvases that feed from that front.
 3. **Walk a flow.** Spawn `product-walker` with the one flow or screen to look at. Append to the
    product map; do not rewrite it.

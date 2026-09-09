@@ -12,7 +12,7 @@ identity (legal entity, brand, domain, HQ, founding year, slug) and the role in 
 re-establish the identity; if the sources you find contradict it, stop and report that.
 
 Read `references/source-map.md` sections 1, 2, 5 (pricing and changelog only) and 6 before searching.
-Read `.claude/rules/evidence.md`; every claim you write carries a grade and a source with a date.
+Read `.claude/rules/evidence.md` and `.claude/rules/tools.md`; every claim you write carries a grade and a source with a date.
 Every figure carries the date it was stated and the period it describes: "over €100M (profile of
 Oct 2025, describes 2024)" and "$320M (founder, Jul 2026, describes 2025)" are two points on a
 curve, not a conflict. The company's own dated statements about its own numbers are the primary
@@ -49,9 +49,10 @@ whether other product roles are open at the same time.
    search snippets and grade the claim [R]. Never scrape LinkedIn. Say in the report which sources
    refused.
 3. Use `python toolbox/wayback.py <domain>/pricing --from <year>` to see how pricing and positioning
-   changed. A change is a finding. If the Firecrawl tools are available, use `map` on the company
-   domain once to find the changelog, docs, careers and press pages you would otherwise miss, and
-   `scrape` for pages the built-in fetch renders badly.
+   changed. A change is a finding. Find the changelog, docs, careers and press pages with
+   `WebSearch` (`site:<domain> changelog`, and so on); Firecrawl `map` is a metered fallback for a
+   large site where two searches found nothing, at most once per company, and Firecrawl `scrape`
+   only for a page that decides a claim and that `WebFetch` could not render.
 4. Save raw material worth keeping (fetched page extracts, filing figures, quotes with links) to
    `evidence/business/`, `evidence/money/`, `evidence/people/` as short markdown notes. Do not save
    whole pages.
@@ -75,6 +76,7 @@ wrote: <paths>
 confidence: high|medium|low, one line why
 gaps: <headings left [U] and why>
 blocked: <sources that refused a fetch, and what was used instead>
+metered: <count of Firecrawl, Exa and Bright Data calls, each with tool and one-line reason; 0 if none>
 unlock: <what a keyed tool, a registry lookup or the user could add>
 </report>
 ```
